@@ -1,0 +1,26 @@
+{
+    "name": "hxFileManager",
+    "url": "https://github.com/HeroEyad/hxFileManager",
+    "license": "MIT",
+    "tags": [
+        "cross",
+        "cpp",
+        "haxe",
+        "openfl",
+        "windows",
+        "utility",
+        "util",
+        "utilities"
+    ],
+    "description": "hxFileManager is a cross-platform library designed for file management tasks in Haxe. It provides a consistent and straightforward API for file operations across various platforms, making it easy for developers to manage files without worrying about platform-specific implementations. The library is lightweight, easy to use, and maintains compatibility with Haxe's ecosystem.",
+    "version": "1.0.0",
+    "releasenote": "Initial release, everything is working correctly.",
+    "contributors": [
+        "HeroEyad"
+    ],
+    "dependencies": {
+        "hxcpp": "",
+        "lime": "",
+        "openfl": ""
+    }
+}

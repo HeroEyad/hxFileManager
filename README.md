@@ -1,10 +1,9 @@
 # hxFileManager
 
-**hxFileManager** is a cross-platform file management library designed for use with Haxe associated with FileManager. It provides a simple and consistent interface for performing file operations across various platforms, making it easy for developers to manage files without dealing with platform-specific details.
+**hxFileManager** is a file management library designed for use with Haxe associated with FileManager. It provides a simple and consistent interface for performing file operations across various platforms, making it easy for developers to manage files without dealing with platform-specific details.
 
 ## Features
 
-- **Cross-Platform Support**: Works seamlessly across different operating systems.
 - **Simple API**: Intuitive and straightforward methods for common file management tasks.
 - **Lightweight**: Minimal overhead, focusing on essential file operations.
 

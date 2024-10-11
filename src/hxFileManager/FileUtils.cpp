@@ -33,8 +33,22 @@ extern "C"
         }
     }
 
+    // Function to rename a folder
+    void rename_folder(const char *oldPath, const char *newPath)
+    {
+        try
+        {
+            fs::rename(oldPath, newPath); // Use rename for both files and folders
+            std::cout << "Folder renamed from " << oldPath << " to " << newPath << std::endl;
+        }
+        catch (const fs::filesystem_error &e)
+        {
+            std::cerr << "Error renaming folder: " << e.what() << std::endl;
+        }
+    }
+
     // New function to copy a file
-    void copy_file(const char *sourcePath, const char *destPath)
+    void copy(const char *sourcePath, const char *destPath)
     {
         try
         {

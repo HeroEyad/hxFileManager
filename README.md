@@ -1,6 +1,6 @@
 # hxFileManager
 
-**hxFileManager** is a file management library designed for use with Haxe associated with FileManager. It provides a simple and consistent interface for performing file operations across various platforms, making it easy for developers to manage files without dealing with platform-specific details.
+**hxFileManager** is a file management library designed for use with Haxe associated with ``sys.FileSystem`` and ``sys.io.File``. It provides a simple and consistent interface for performing file operations across various platforms, making it easy for developers to manage files without dealing with platform-specific details.
 
 ## Features
 
@@ -29,7 +29,9 @@ import hxFileManager.FileManager;
 class Main {
     static function main() {
         // Example usage of the library
-        FileManager.copyFile("source.txt", "destination.txt");
+        FileManager.copyFile("source.txt", "destination");
+        FileManager.copyFolder('folder', 'destination');
+        FileManager.deleteFile("testfolder/test.html");
     }
 }
 ```
@@ -45,3 +47,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Links
 
 - [GitHub Repository](https://github.com/HeroEyad/hxFileManager)
+- [Haxelib Library](https://lib.haxe.org/p/hxFileManager/)

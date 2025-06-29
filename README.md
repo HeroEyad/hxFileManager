@@ -1,6 +1,16 @@
 # hxFileManager
 
-**hxFileManager** is a file management library designed for use with Haxe associated with ``sys.FileSystem`` and ``sys.io.File``. It provides a simple and consistent interface for performing file operations across various platforms, making it easy for developers to manage files without dealing with platform-specific details.
+<p align="center">
+  <img src="hxfilemanagerlogo.png" width="256" />
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/github/repo-size/HeroEyad/hxFileManager" />
+  <img src="https://badgen.net/github/stars/HeroEyad/hxFileManager" />
+  <img src="https://badgen.net/badge/license/MIT/green" />
+</p>
+
+**hxFileManager** is a file management library designed for use with Haxe, associated with `sys.FileSystem` and `sys.io.File`. It provides a simple and consistent interface for performing file operations across various platforms, making it easy for developers to manage files without dealing with platform-specific details.
 
 ## Features
 
@@ -13,11 +23,11 @@ To include `hxFileManager` in your Haxe project, add it to your project dependen
 
 ```json
 {
-    "dependencies": {
-        "hxFileManager": "1.0.0"
-    }
+  "dependencies": {
+    "hxFileManager": "1.0.0"
+  }
 }
-```
+````
 
 ## Usage
 
@@ -30,7 +40,7 @@ class Main {
     static function main() {
         // Example usage of the library
         FileManager.copyFile("source.txt", "destination");
-        FileManager.copyFolder('folder', 'destination');
+        FileManager.copyFolder("folder", "destination");
         FileManager.deleteFile("testfolder/test.html");
     }
 }
@@ -38,7 +48,7 @@ class Main {
 
 ## Contributors
 
-- HeroEyad
+* HeroEyad
 
 ## License
 
@@ -46,6 +56,8 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Links
 
-- [GitHub Repository](https://github.com/HeroEyad/hxFileManager)
-- [Haxelib Library](https://lib.haxe.org/p/hxFileManager/)
-- [API Documentation](https://www.heroeyad.xyz/hxFileManagerAPI/)
+* [GitHub Repository](https://github.com/HeroEyad/hxFileManager)
+* [Haxelib Library](https://lib.haxe.org/p/hxFileManager/)
+* [API Documentation](https://www.heroeyad.xyz/hxFileManagerAPI/)
+
+```

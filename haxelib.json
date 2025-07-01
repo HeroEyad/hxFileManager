@@ -12,7 +12,7 @@
         "utilities"
     ],
     "description": "hxFileManager is a Cross-Platform library designed for file management tasks in Haxe. It provides a consistent and straightforward API for file operations, making it easy for developers to manage files. The library is lightweight, easy to use, and maintains compatibility with Haxe's ecosystem.",
-    "version": "1.2.5",
+    "version": "1.2.6-beta",
     "releasenote": "Improved performance and safety with threaded I/O operations! Added async versions of readFile (readFileAsync), readJsonAsync, writeJsonAsync, and deletePathAsync to prevent blocking the main thread. Introduced searchFilesAsync for non-blocking recursive search. Added getFileExtension utility, and implemented safeWrite with automatic backup support. (Note: readFile is now deprecated in favor of its async counterpart.)",
     "contributors": [
         "HeroEyad"

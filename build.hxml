@@ -1,0 +1,17 @@
+# Output directory
+-cpp bin/
+
+# Entry point
+-main tools.Main
+
+# Enable all Haxe std libs
+-lib hxFileManager
+
+# Ensure multithreading and sys access
+--macro include('hxFileManager')
+
+# Target Windows only
+-D windows
+
+# Optional: Show full stack traces
+--debug

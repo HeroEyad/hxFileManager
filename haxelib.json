@@ -12,12 +12,13 @@
         "utilities"
     ],
     "description": "hxFileManager is a Cross-Platform library designed for file management tasks in Haxe. It provides a consistent and straightforward API for file operations, making it easy for developers to manage files. The library is lightweight, easy to use, and maintains compatibility with Haxe's ecosystem.",
-    "version": "1.2.5",
-    "releasenote": "Improved performance and safety with threaded I/O operations! Added async versions of readFile (readFileAsync), readJsonAsync, writeJsonAsync, and deletePathAsync to prevent blocking the main thread. Introduced searchFilesAsync for non-blocking recursive search. Added getFileExtension utility, and implemented safeWrite with automatic backup support. (Note: readFile is now deprecated in favor of its async counterpart.)",
+    "version": "1.3.0",
+    "releasenote": "Added a thread pool so it doesn't have to create threads every time you call an async function. Added more functions like copyFolderRecursive, deleteFolder, getFolderSize, and generateUniqueFileName. Also added admin check to detect if the program is running as admin, and a function to request admin privileges on Windows. New functions: copyFolderRecursive, deleteFolder, getFolderSize, getFileSize, generateUniqueFileName, isAdmin, requestAdmin.",
     "contributors": [
         "HeroEyad"
     ],
     "dependencies": {
-        "hxcpp": ""
+        "hxcpp": "",
+        "lime": ""
     }
 }

@@ -39,6 +39,7 @@ import hxFileManager.FileManager;
 class Main {
     static function main() {
         // Example usage of the library
+        FileManager.initThreadPool(); // VERY IMPORTANT!!!
         FileManager.copyFile("source.txt", "destination");
         FileManager.copyFolder("folder", "destination");
         FileManager.deleteFile("testfolder/test.html");
@@ -59,5 +60,3 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 * [GitHub Repository](https://github.com/HeroEyad/hxFileManager)
 * [Haxelib Library](https://lib.haxe.org/p/hxFileManager/)
 * [API Documentation](https://www.heroeyad.xyz/hxFileManagerAPI/)
-
-```

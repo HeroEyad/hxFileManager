@@ -1,17 +1,24 @@
-# Output directory
+# output directory
 -cpp bin/
 
-# Entry point
+# entry point
 -main tools.Main
 
-# Enable all Haxe std libs
+# enable all haxe std libs
 -lib hxFileManager
 
-# Ensure multithreading and sys access
+# conditionally include lime for android
+# target android
+-D android
+#if android
+-lib lime
+#end
+
+# ensure multithreading and sys access
 --macro include('hxFileManager')
 
-# Target Windows only
+# target windows only
 -D windows
 
-# Optional: Show full stack traces
+# optional: show full stack traces
 --debug

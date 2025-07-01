@@ -7,11 +7,26 @@ import haxe.ds.StringMap;
 import haxe.Json;
 import haxe.Timer;
 import sys.thread.Thread;
-import sys.thread.Mutex;
 import sys.io.Process;
+#if cpp
+import sys.thread.Mutex;
+#end
+#if android
+import lime.system.System;
+#end
+
 
 class FileManager {
+	#if (windows || mac || linux)
 	public static final rootDir:String = Path.directory(Sys.programPath());
+	#else
+	public static final rootDir:String = ""; // or safe fallback
+	#end
+	public static var isAdmin(default, null):Bool = FileUtils.isUserAdmin();
+
+	static var watchIdCounter:Int = 0;
+    static var activeWatchers:Map<Int, Bool> = new Map();
+
 
 	// === Thread Pool ===
 	static var workers:Array<Thread> = [];
@@ -66,6 +81,110 @@ class FileManager {
 		}
 	}
 
+	public static function stopWatchingFolder(watchId:Int):Void {
+		if (activeWatchers.exists(watchId)) {
+			activeWatchers.set(watchId, false); // polling loop will see this and exit
+			trace('Requested stop for watch ID $watchId');
+		}
+	}
+	
+	public static function watchFolder(path:String, onChange:Void->Void, intervalMs:Int = 1000):Int {
+		#if !mobile
+			var watchId = watchIdCounter++;
+			var prevHash = getFolderHash(path);
+			activeWatchers.set(watchId, true);
+	
+			function poll():Void {
+				enqueueAsync(() -> {
+					Sys.sleep(intervalMs / 1000);
+	
+					if (!activeWatchers.exists(watchId) || !activeWatchers.get(watchId)) {
+						trace('Stopped watching folder: $path');
+						activeWatchers.remove(watchId);
+						return;
+					}
+	
+					var newHash = getFolderHash(path);
+					if (newHash != prevHash) {
+						prevHash = newHash;
+						Timer.delay(onChange, 0); // safely call on main thread
+					}
+	
+					poll(); // re-arm next check
+				});
+			}
+	
+			poll();
+			trace('Started watching folder: $path (ID $watchId)');
+			return watchId;
+		#end
+	
+		return -1;
+	}
+	
+	static function getFolderHash(path:String):Int {
+		var hash = 0;
+		if (!folderExists(path)) return 0;
+		for (file in FileSystem.readDirectory(path)) {
+			var full = Path.join([path, file]);
+			if (!FileSystem.isDirectory(full)) {
+				hash += Std.int(FileSystem.stat(full).mtime.getTime());
+			}
+		}
+		return hash;
+	}
+
+	public static function getFileSize(filePath:String, onResult:Int->Void, ?onError:Dynamic->Void):Void {
+		enqueueAsync(() -> {
+			try {
+				var size = fileExists(filePath) ? FileSystem.stat(filePath).size : 0;
+				Timer.delay(() -> onResult(size), 0);
+			} catch (e:Dynamic) {
+				if (onError != null) Timer.delay(() -> onError(e), 0);
+			}
+		});
+	}
+
+	public static function getFolderSize(folderPath:String, onResult:Int->Void, ?onError:Dynamic->Void):Void {
+		enqueueAsync(() -> {
+			var totalSize = 0;
+
+			function scan(dir:String):Void {
+				if (!folderExists(dir)) return;
+				for (item in FileSystem.readDirectory(dir)) {
+					var fullPath = Path.join([dir, item]);
+					if (FileSystem.isDirectory(fullPath)) {
+						scan(fullPath);
+					} else {
+						totalSize += fileExists(fullPath) ? FileSystem.stat(fullPath).size : 0;
+					}
+				}
+			}
+
+			try {
+				scan(folderPath);
+				Timer.delay(() -> onResult(totalSize), 0);
+			} catch (e:Dynamic) {
+				if (onError != null) Timer.delay(() -> onError(e), 0);
+			}
+		});
+	}
+
+	public static function generateUniqueFileName(basePath:String, onResult:String->Void):Void {
+		enqueueAsync(() -> {
+			var dir = Path.directory(basePath);
+			var name = Path.withoutExtension(Path.withoutDirectory(basePath));
+			var ext = Path.extension(basePath);
+			var counter = 1;
+
+			while (FileSystem.exists(basePath)) {
+				basePath = Path.join([dir, name + " (" + counter++ + ")." + ext]);
+			}
+
+			Timer.delay(() -> onResult(basePath), 0);
+		});
+	}
+	
 	public static function readFileAsync(filePath:String, ?onSuccess:String->Void = null, ?onError:Dynamic->Void = null):Void {
 		enqueueAsync(() -> {
 			try {
@@ -120,7 +239,49 @@ class FileManager {
 	public static function moveFolder(sourcePath:String, destPath:String):Void {
 		try FileSystem.rename(sourcePath, destPath) catch (e:Dynamic) trace("Error moving folder: " + e);
 	}
+	
+	public static function copyFolderRecursive(source:String, dest:String, ?onDone:Void->Void, ?onError:Dynamic->Void):Void {
+		enqueueAsync(() -> {
+			try {
+				if (!folderExists(source)) {
+					trace("Source folder does not exist: " + source);
+					if (onError != null) Timer.delay(() -> onError("Source folder does not exist"), 0);
+					return;
+				}
 
+				if (!folderExists(dest))
+					FileSystem.createDirectory(dest);
+
+				function copyRecursive(src:String, dst:String):Void {
+					for (item in FileSystem.readDirectory(src)) {
+						var srcPath = Path.join([src, item]);
+						var dstPath = Path.join([dst, item]);
+
+						if (FileSystem.isDirectory(srcPath)) {
+							if (!folderExists(dstPath))
+								FileSystem.createDirectory(dstPath);
+							copyRecursive(srcPath, dstPath);
+						} else {
+							try {
+								File.copy(srcPath, dstPath);
+							} catch (e:Dynamic) {
+								trace("Failed to copy file: " + srcPath + " -> " + dstPath + " | " + e);
+								if (onError != null) Timer.delay(() -> onError(e), 0);
+							}
+						}
+					}
+				}
+
+				copyRecursive(source, dest);
+				if (onDone != null) Timer.delay(onDone, 0);
+			} catch (e:Dynamic) {
+				trace("Error copying folder: " + e);
+				if (onError != null) Timer.delay(() -> onError(e), 0);
+			}
+		});
+	}
+
+	
 	public static function copyFile(sourcePath:String, destPath:String):Void {
 		try {
 			File.copy(sourcePath, destPath);
@@ -253,20 +414,24 @@ class FileManager {
 		base = Path.join([Sys.getEnv("HOME"), "Library", "Application Support"]);
 		#elseif linux
 		base = Sys.getEnv("HOME");
+		#elseif android
+		base = System.applicationStorageDirectory;
+		#elseif ios
+		base = "/Documents"; // default sandbox path on iOS
 		#else
 		throw "Unsupported platform";
 		#end
-
+	
 		if (base == null) throw "Could not determine AppData path";
-
+	
 		var appDataPath = Path.join([base, appName]);
-
-		if (!FileSystem.exists(appDataPath)) 
+		if (!FileSystem.exists(appDataPath))
 			FileSystem.createDirectory(appDataPath);
-
+	
 		return appDataPath;
 	}
-
+	
+	
 	public static function logOperation(operation:String, path:String, success:Bool):Void {
 		trace('${Date.now()}: $operation on $path ${success ? "succeeded" : "failed"}');
 	}
@@ -302,5 +467,57 @@ class FileManager {
 		File.saveContent(filePath, content);
 		var elapsedTime = Timer.stamp() - startTime;
 		trace("File safely written to: " + filePath + " in " + elapsedTime + " seconds");
+	}
+
+	public static function requestAdmin(?onSuccess:Void->Void, ?onError:Dynamic->Void):Void {
+		enqueueAsync(() -> {
+			try {
+				#if cpp			
+					#if windows
+					FileUtils.requestAdmin();
+					#elseif linux
+						try {
+							Sys.command("pkexec", [exePath]);
+						} catch (e:Dynamic) {
+							try {
+								Sys.command("gksudo", [exePath]);
+							} catch (e2:Dynamic) {
+								Sys.println("[requestAdmin] Could not elevate. Please run with sudo.");
+								if (onError != null) Timer.delay(() -> onError(e2), 0);
+								return;
+							}
+						}
+					#elseif mac
+						var script = 'do shell script "' + exePath + '" with administrator privileges';
+						Sys.command("osascript", ["-e", script]);
+					#else
+						trace("[requestAdmin] Platform not supported.");
+						if (onError != null) Timer.delay(() -> onError("Platform not supported"), 0);
+						return;
+					#end
+				#else
+					trace("[requestAdmin] Elevation only works on native targets.");
+					if (onError != null) Timer.delay(() -> onError("Elevation only works on native targets"), 0);
+					return;
+				#end
+
+				Timer.delay(onSuccess, 0);
+			} catch (e:Dynamic) {
+				trace("[requestAdmin] Error: " + e);
+				if (onError != null) Timer.delay(() -> onError(e), 0);
+			}
+		});
+	}
+
+	public static function getPlatformName():String {
+		#if (windows || mac || linux)
+		return Sys.systemName();
+		#elseif android
+		return "android";
+		#elseif ios
+		return "ios";
+		#else
+		return "unknown";
+		#end
 	}
 }

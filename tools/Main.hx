@@ -9,6 +9,20 @@ class Main {
         FileManager.initThreadPool();
         trace("It's running a threadPool!");
 
+        /*if (!FileManager.isAdmin) { // try it out yourself
+            trace("Not an Admin, Requesting Admin!");
+            try {
+            FileManager.requestAdmin(() -> {
+                trace("Admin privileges granted.");
+            }, (error:Dynamic) -> {
+                trace("Admin privileges not granted. Error: " + error);
+            });
+            } catch (e:Dynamic) {
+            trace("Error occurred while requesting admin: " + e);
+            }
+        }*/
+        trace("Running as admin: " + FileManager.isAdmin);
+
         var testFile = "test.txt";
         var testFolder = "testFolder";
         var renamedFile = "renamed.txt";

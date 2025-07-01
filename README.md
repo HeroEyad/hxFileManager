@@ -39,6 +39,7 @@ import hxFileManager.FileManager;
 class Main {
     static function main() {
         // Example usage of the library
+        FileManager.initThreadPool(); // VERY IMPORTANT!!
         FileManager.copyFile("source.txt", "destination");
         FileManager.copyFolder("folder", "destination");
         FileManager.deleteFile("testfolder/test.html");

@@ -24,7 +24,7 @@ To include `hxFileManager` in your Haxe project, add it to your project dependen
 ```json
 {
   "dependencies": {
-    "hxFileManager": "1.0.0"
+    "hxFileManager": "1.3.0"
   }
 }
 ````

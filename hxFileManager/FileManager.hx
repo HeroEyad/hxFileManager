@@ -398,6 +398,24 @@ class FileManager {
 		});
 	}
 
+	public static function createFolderAsync(folderPath:String, ?onSuccess:Void->Void, ?onError:Dynamic->Void):Void {
+		enqueueAsync(() -> {
+			try {
+				if (FileSystem.exists(folderPath)) {
+					trace("Folder already exists: " + folderPath);
+					if (onSuccess != null) Timer.delay(onSuccess, 0);
+					return;
+				}
+				FileSystem.createDirectory(folderPath);
+				trace("Folder created at: " + folderPath);
+				if (onSuccess != null) Timer.delay(onSuccess, 0);
+			} catch (e:Dynamic) {
+				trace("Error creating folder: " + e);
+				if (onError != null) Timer.delay(() -> onError(e), 0);
+			}
+		});
+	}
+
 	public static function getAppDataPath(appName:String):String {
 		var base:String;
 		#if windows
@@ -448,11 +466,46 @@ class FileManager {
 		});
 	}
 
+	public static function createTempFile(prefix:String = "tmp_", suffix:String = ""):String {
+		var base = Sys.getEnv("TMPDIR");
+		if (base == null) {
+			#if windows
+			base = Sys.getEnv("TEMP");
+			#else
+			base = "/tmp";
+			#end
+		}
+
+		var name = prefix + Date.now().getTime() + "_" + Std.string(Math.random()).substr(2) + suffix;
+		var path = Path.join([base, name]);
+
+		createFileAsync(path, ""); // create empty file
+		return path;
+	}
+
+	public static function createTempFolder(prefix:String = "tmp_"):String {
+		var base = Sys.getEnv("TMPDIR");
+		if (base == null) {
+			#if windows
+			base = Sys.getEnv("TEMP");
+			#else
+			base = "/tmp";
+			#end
+		}
+
+		var name = prefix + Date.now().getTime() + "_" + Std.string(Math.random()).substr(2);
+		var path = Path.join([base, name]);
+
+		createFolderAsync(path);
+		return path;
+	}
+
+
 	public static function safeWrite(filePath:String, content:String):Void {
 		var startTime = Timer.stamp();
 		if (fileExists(filePath)) 
 			File.copy(filePath, filePath + ".bak");
-		File.saveContent(filePath, content);
+		createFileAsync(filePath, content);
 		var elapsedTime = Timer.stamp() - startTime;
 		trace("File safely written to: " + filePath + " in " + elapsedTime + " seconds");
 	}

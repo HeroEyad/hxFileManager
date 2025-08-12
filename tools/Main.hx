@@ -53,30 +53,27 @@ class Main {
 
         FileManager.writeJsonAsync(jsonPath, {msg: "Hello, JSON!"}, _ -> {
             FileManager.logOperation("Write JSON", jsonPath, FileManager.fileExists(jsonPath));
-            FileManager.readJsonAsync(jsonPath, json -> {
+        });
+        FileManager.readJsonAsync(jsonPath, json -> {
                 FileManager.logOperation("Read JSON", jsonPath, json != null);
                 trace("Read JSON Content: " + json);
-
-                FileManager.searchFilesAsync(".", ".txt", results -> {
-                    FileManager.logOperation("Search Files", ".", results.length > 0);
-                    trace("Search Results: " + results);
-
-                    // Safe write
-                    FileManager.safeWrite("safe.txt", "Safe write content");
-                    FileManager.logOperation("Safe Write", "safe.txt", FileManager.fileExists("safe.txt"));
-
-                    // Clean up
-                    FileManager.deleteFile(copiedFile);
-                    FileManager.logOperation("Delete File", copiedFile, !FileManager.fileExists(copiedFile));
-
-                    FileManager.deleteFolder(testFolder);
-                    FileManager.logOperation("Delete Folder", testFolder, !FileManager.folderExists(testFolder));
-
-                    done = true;
-                });
-            });
         });
 
+		FileManager.searchFilesAsync(".", ".txt", (results) -> {
+			FileManager.logOperation("Search Files", ".", results.length > 0);
+			trace("Search Results: " + results);
+		});
+		FileManager.safeWrite("safe.txt", "Safe write content");
+		FileManager.logOperation("Safe Write", "safe.txt", FileManager.fileExists("safe.txt"));
+
+		// unsure if this does anything
+		FileManager.deleteFile(copiedFile);
+		FileManager.logOperation("Delete File", copiedFile, !FileManager.fileExists(copiedFile));
+
+		FileManager.deleteFolder(testFolder);
+		FileManager.logOperation("Delete Folder", testFolder, !FileManager.folderExists(testFolder));
+
+		done = true;
         while (!done) Sys.sleep(0.1);
 
         trace("=== FileManager Test Complete ===");

@@ -1,8 +1,11 @@
 package hxFileManager;
+
+#if windows
+
 @:buildXml('
 <target id="haxe">
-    <lib name="advapi32.lib" if="windows" />
-    <lib name="shell32.lib" if="windows" />
+    <lib name="advapi32.lib" />
+    <lib name="shell32.lib" />
 </target>
 ')
 
@@ -48,5 +51,7 @@ class FileUtils {
     var exePath = Sys.executablePath();
     untyped __cpp__('run_as_admin({0}.c_str())', exePath);
     #end
+  }
 }
-}
+
+#end

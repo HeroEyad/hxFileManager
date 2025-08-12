@@ -7,18 +7,13 @@
 # enable all haxe std libs
 -lib hxFileManager
 
-# conditionally include lime for android
-# target android
--D android
-#if android
--lib lime
-#end
-
 # ensure multithreading and sys access
 --macro include('hxFileManager')
 
-# target windows only
--D windows
+# target any platform
+#-D windows
+#-D macos # for this one idk what's it called but if this doesnt work try "mac" instead
+-D linux
 
 # optional: show full stack traces
 --debug

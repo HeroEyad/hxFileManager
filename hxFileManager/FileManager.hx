@@ -11,10 +11,6 @@ import sys.io.Process;
 #if cpp
 import sys.thread.Mutex;
 #end
-#if android
-import lime.system.System;
-#end
-
 
 class FileManager {
 	#if (windows || mac || linux)
@@ -22,11 +18,11 @@ class FileManager {
 	#else
 	public static final rootDir:String = ""; // or safe fallback
 	#end
-	public static var isAdmin(default, null):Bool = FileUtils.isUserAdmin();
+	public static var isAdmin(default, null):Bool = #if windows FileUtils.isUserAdmin() #elseif (linux || mac) Sys.command("id", ["-u"]) == 0 #else false #end;
 
+	static var exePath = Sys.programPath();
 	static var watchIdCounter:Int = 0;
     static var activeWatchers:Map<Int, Bool> = new Map();
-
 
 	// === Thread Pool ===
 	static var workers:Array<Thread> = [];
@@ -89,37 +85,33 @@ class FileManager {
 	}
 	
 	public static function watchFolder(path:String, onChange:Void->Void, intervalMs:Int = 1000):Int {
-		#if !mobile
-			var watchId = watchIdCounter++;
-			var prevHash = getFolderHash(path);
-			activeWatchers.set(watchId, true);
-	
-			function poll():Void {
-				enqueueAsync(() -> {
-					Sys.sleep(intervalMs / 1000);
-	
-					if (!activeWatchers.exists(watchId) || !activeWatchers.get(watchId)) {
-						trace('Stopped watching folder: $path');
-						activeWatchers.remove(watchId);
-						return;
-					}
-	
-					var newHash = getFolderHash(path);
-					if (newHash != prevHash) {
-						prevHash = newHash;
-						Timer.delay(onChange, 0); // safely call on main thread
-					}
-	
-					poll(); // re-arm next check
-				});
-			}
-	
-			poll();
-			trace('Started watching folder: $path (ID $watchId)');
-			return watchId;
-		#end
-	
-		return -1;
+		var watchId = watchIdCounter++;
+		var prevHash = getFolderHash(path);
+		activeWatchers.set(watchId, true);
+
+		function poll():Void {
+			enqueueAsync(() -> {
+				Sys.sleep(intervalMs / 1000);
+
+				if (!activeWatchers.exists(watchId) || !activeWatchers.get(watchId)) {
+					trace('Stopped watching folder: $path');
+					activeWatchers.remove(watchId);
+					return;
+				}
+
+				var newHash = getFolderHash(path);
+				if (newHash != prevHash) {
+					prevHash = newHash;
+					Timer.delay(onChange, 0); // safely call on main thread
+				}
+
+				poll(); // re-arm next check
+			});
+		}
+
+		poll();
+		trace('Started watching folder: $path (ID $watchId)');
+		return watchId;
 	}
 	
 	static function getFolderHash(path:String):Int {
@@ -414,10 +406,6 @@ class FileManager {
 		base = Path.join([Sys.getEnv("HOME"), "Library", "Application Support"]);
 		#elseif linux
 		base = Sys.getEnv("HOME");
-		#elseif android
-		base = System.applicationStorageDirectory;
-		#elseif ios
-		base = "/Documents"; // default sandbox path on iOS
 		#else
 		throw "Unsupported platform";
 		#end
@@ -512,10 +500,6 @@ class FileManager {
 	public static function getPlatformName():String {
 		#if (windows || mac || linux)
 		return Sys.systemName();
-		#elseif android
-		return "android";
-		#elseif ios
-		return "ios";
 		#else
 		return "unknown";
 		#end

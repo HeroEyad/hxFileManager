@@ -9,6 +9,8 @@ class Main {
         FileManager.initThreadPool();
         trace("It's running a threadPool!");
 
+        trace("User is on " + FileManager.getPlatformName());
+
         /*if (!FileManager.isAdmin) { // try it out yourself
             trace("Not an Admin, Requesting Admin!");
             try {

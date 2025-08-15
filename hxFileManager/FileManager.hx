@@ -45,8 +45,13 @@ class FileManager {
 			workers.push(thread);
 		}
 	}
+
 	static var roundRobinIndex = 0;
 
+	/**
+	 * Enqueue a function to run asynchronously on a worker thread.
+	 * @param fn Function to execute.
+	 */
 	public static function enqueueAsync(fn:Void->Void):Void {
 		if (workers.length == 0) {
 			trace("No worker threads! Did you forget initThreadPool?");
@@ -60,6 +65,11 @@ class FileManager {
 
 	// === File Operations ===
 
+	/**
+	 * Creates a file with the specified content.
+	 * @param filePath Path where the file will be created.
+	 * @param content Content to write to the file.
+	 */
 	public static function createFile(filePath:String, content:String):Void {
 		try {
 			File.saveContent(filePath, content);
@@ -69,6 +79,11 @@ class FileManager {
 		}
 	}
 
+	/**
+	 * Reads a file synchronously. Deprecated.
+	 * @param filePath Path of the file to read.
+	 * @return File content as a string.
+	 */
 	@:deprecated("Use readFileAsync instead")
 	public static function readFile(filePath:String):String {
 		try return File.getContent(filePath) catch (e:Dynamic) {
@@ -77,13 +92,24 @@ class FileManager {
 		}
 	}
 
+	/**
+	 * Stops watching a folder by ID.
+	 * @param watchId ID returned by watchFolder.
+	 */
 	public static function stopWatchingFolder(watchId:Int):Void {
 		if (activeWatchers.exists(watchId)) {
-			activeWatchers.set(watchId, false); // polling loop will see this and exit
+			activeWatchers.set(watchId, false);
 			trace('Requested stop for watch ID $watchId');
 		}
 	}
 	
+	/**
+	 * Watches a folder for changes.
+	 * @param path Folder path to watch.
+	 * @param onChange Callback invoked when folder contents change.
+	 * @param intervalMs Optional polling interval in milliseconds (default 1000).
+	 * @return Watch ID to later stop watching.
+	 */
 	public static function watchFolder(path:String, onChange:Void->Void, intervalMs:Int = 1000):Int {
 		var watchId = watchIdCounter++;
 		var prevHash = getFolderHash(path);
@@ -102,10 +128,10 @@ class FileManager {
 				var newHash = getFolderHash(path);
 				if (newHash != prevHash) {
 					prevHash = newHash;
-					Timer.delay(onChange, 0); // safely call on main thread
+					Timer.delay(onChange, 0);
 				}
 
-				poll(); // re-arm next check
+				poll();
 			});
 		}
 
@@ -126,6 +152,12 @@ class FileManager {
 		return hash;
 	}
 
+	/**
+	 * Get file size asynchronously.
+	 * @param filePath Path of the file.
+	 * @param onResult Callback called with file size in bytes.
+	 * @param onError Optional callback called with error.
+	 */
 	public static function getFileSize(filePath:String, onResult:Int->Void, ?onError:Dynamic->Void):Void {
 		enqueueAsync(() -> {
 			try {
@@ -137,6 +169,12 @@ class FileManager {
 		});
 	}
 
+	/**
+	 * Get folder size asynchronously, recursively.
+	 * @param folderPath Path of the folder.
+	 * @param onResult Callback called with total size in bytes.
+	 * @param onError Optional callback called with error.
+	 */
 	public static function getFolderSize(folderPath:String, onResult:Int->Void, ?onError:Dynamic->Void):Void {
 		enqueueAsync(() -> {
 			var totalSize = 0;
@@ -162,6 +200,11 @@ class FileManager {
 		});
 	}
 
+	/**
+	 * Generates a unique file name based on basePath.
+	 * @param basePath Base path to generate a unique name from.
+	 * @param onResult Callback called with unique file path.
+	 */
 	public static function generateUniqueFileName(basePath:String, onResult:String->Void):Void {
 		enqueueAsync(() -> {
 			var dir = Path.directory(basePath);
@@ -176,7 +219,13 @@ class FileManager {
 			Timer.delay(() -> onResult(basePath), 0);
 		});
 	}
-	
+
+	/**
+	 * Asynchronously reads a file.
+	 * @param filePath Path of the file to read.
+	 * @param onSuccess Optional callback called with file content.
+	 * @param onError Optional callback called with error.
+	 */
 	public static function readFileAsync(filePath:String, ?onSuccess:String->Void = null, ?onError:Dynamic->Void = null):Void {
 		enqueueAsync(() -> {
 			try {
@@ -188,17 +237,36 @@ class FileManager {
 		});
 	}
 
+	/**
+	 * Retrieves file metadata.
+	 * @param filePath Path of the file.
+	 * @return StringMap with "size" and "lastModified".
+	 */
 	public static function getFileMetadata(filePath:String):StringMap<Dynamic> {
 		var stat = FileSystem.stat(filePath);   
 		return ["size" => stat.size, "lastModified" => stat.mtime];
 	}
 
+	/**
+	 * Checks if a file exists.
+	 * @param filePath Path of the file.
+	 * @return True if file exists.
+	 */
 	public static function fileExists(filePath:String):Bool
 		return FileSystem.exists(filePath);
 
+	/**
+	 * Checks if a folder exists.
+	 * @param folderPath Path of the folder.
+	 * @return True if folder exists.
+	 */
 	public static function folderExists(folderPath:String):Bool
 		return FileSystem.isDirectory(folderPath);
 
+	/**
+	 * Deletes a file.
+	 * @param filePath Path of the file.
+	 */
 	public static function deleteFile(filePath:String):Void {
 		if (!fileExists(filePath)) return;
 		try {
@@ -209,6 +277,11 @@ class FileManager {
 		}
 	}
 
+	/**
+	 * Renames a file.
+	 * @param oldPath Current file path.
+	 * @param newPath New file path.
+	 */
 	public static function renameFile(oldPath:String, newPath:String):Void {
 		try {
 			FileSystem.rename(oldPath, newPath);
@@ -218,6 +291,11 @@ class FileManager {
 		}
 	}
 
+	/**
+	 * Renames a folder.
+	 * @param folder Current folder path.
+	 * @param newFolder New folder path.
+	 */
 	public static function renameFolder(folder:String, newFolder:String):Void {
 		if (!fileExists(folder)) return;
 		try {
@@ -228,10 +306,22 @@ class FileManager {
 		}
 	}
 
+	/**
+	 * Moves a folder.
+	 * @param sourcePath Source folder path.
+	 * @param destPath Destination folder path.
+	 */
 	public static function moveFolder(sourcePath:String, destPath:String):Void {
 		try FileSystem.rename(sourcePath, destPath) catch (e:Dynamic) trace("Error moving folder: " + e);
 	}
-	
+
+	/**
+	 * Recursively copies a folder.
+	 * @param source Source folder path.
+	 * @param dest Destination folder path.
+	 * @param onDone Optional callback when done.
+	 * @param onError Optional callback on error.
+	 */
 	public static function copyFolderRecursive(source:String, dest:String, ?onDone:Void->Void, ?onError:Dynamic->Void):Void {
 		enqueueAsync(() -> {
 			try {
@@ -273,7 +363,11 @@ class FileManager {
 		});
 	}
 
-	
+	/**
+	 * Copies a single file.
+	 * @param sourcePath Source file path.
+	 * @param destPath Destination file path.
+	 */
 	public static function copyFile(sourcePath:String, destPath:String):Void {
 		try {
 			File.copy(sourcePath, destPath);
@@ -283,6 +377,11 @@ class FileManager {
 		}
 	}
 
+	/**
+	 * Lists files in a folder.
+	 * @param folderPath Folder path to list.
+	 * @return Array of file names.
+	 */
 	public static function listFiles(folderPath:String):Array<String> {
 		try return FileSystem.readDirectory(folderPath) catch (e:Dynamic) {
 			trace("Error listing files: " + e);
@@ -290,6 +389,10 @@ class FileManager {
 		}
 	}
 
+	/**
+	 * Creates a folder.
+	 * @param folderPath Path of the folder.
+	 */
 	public static function createFolder(folderPath:String):Void {
 		if (FileSystem.exists(folderPath)) {
 			trace("Folder already exists: " + folderPath);
@@ -303,6 +406,10 @@ class FileManager {
 		}
 	}
 
+	/**
+	 * Deletes a folder.
+	 * @param folderPath Path of the folder.
+	 */
 	public static function deleteFolder(folderPath:String):Void {
 		if (!folderExists(folderPath)) return;
 		try {
@@ -313,11 +420,17 @@ class FileManager {
 		}
 	}
 
+	// Deprecated wrapper
 	@:deprecated("Use deletePathAsync!")
 	public static function deletePath(path:String):Void {
 		remove(Path.normalize(path));
 	}
 
+	/**
+	 * Deletes a path asynchronously.
+	 * @param path File or folder path to delete.
+	 * @param onDone Optional callback when deletion completes.
+	 */
 	public static function deletePathAsync(path:String, ?onDone:Void->Void):Void {
 		enqueueAsync(() -> {
 			deletePath(path);
@@ -341,6 +454,11 @@ class FileManager {
 		}
 	}
 
+	/**
+	 * Reads JSON synchronously. Deprecated.
+	 * @param filePath Path to JSON file.
+	 * @return Parsed JSON.
+	 */
 	@:deprecated("Use readJsonAsync!")
 	public static function readJson(filePath:String):Dynamic {
 		var startTime = Timer.stamp();
@@ -350,6 +468,12 @@ class FileManager {
 		return result;
 	}
 
+	/**
+	 * Reads JSON asynchronously.
+	 * @param filePath Path to JSON file.
+	 * @param onResult Callback called with parsed JSON.
+	 * @param onError Optional callback called on error.
+	 */
 	public static function readJsonAsync(filePath:String, onResult:Dynamic->Void, ?onError:Dynamic->Void = null):Void {
 		readFileAsync(filePath, (content) -> {
 			try {
@@ -364,6 +488,11 @@ class FileManager {
 		}, onError);
 	}
 
+	/**
+	 * Writes JSON synchronously. Deprecated.
+	 * @param filePath Path to write JSON.
+	 * @param data Data to write.
+	 */
 	@:deprecated("Use writeJsonAsync!")
 	public static function writeJson(filePath:String, data:Dynamic):Void {
 		var startTime = Timer.stamp();
@@ -372,6 +501,12 @@ class FileManager {
 		trace("JSON written to: " + filePath + " in " + elapsedTime + " seconds");
 	}
 
+	/**
+	 * Writes JSON asynchronously.
+	 * @param filePath Path to write JSON.
+	 * @param data Data to write.
+	 * @param onDone Optional callback with elapsed time in seconds.
+	 */
 	public static function writeJsonAsync(filePath:String, data:Dynamic, ?onDone:Float->Void):Void {
 		enqueueAsync(() -> {
 			var startTime = Timer.stamp();
@@ -383,10 +518,18 @@ class FileManager {
 		});
 	}
 
+	/**
+	 * Creates a file asynchronously.
+	 * @param filePath Path to create the file.
+	 * @param content Content to write.
+	 * @param onSuccess Optional callback with elapsed time.
+	 * @param onError Optional callback on error.
+	 */
 	public static function createFileAsync(filePath:String, content:String, ?onSuccess:Float->Void, ?onError:Dynamic->Void):Void {
 		enqueueAsync(() -> {
 			var startTime = Timer.stamp();
 			try {
+			
 				File.saveContent(filePath, content);
 				var elapsedTime = Timer.stamp() - startTime;
 				trace("File created at: " + filePath + " in " + elapsedTime + " seconds");
@@ -398,6 +541,12 @@ class FileManager {
 		});
 	}
 
+	/**
+	 * Creates a folder asynchronously.
+	 * @param folderPath Path of the folder to create.
+	 * @param onSuccess Optional callback when folder is created.
+	 * @param onError Optional callback on error.
+	 */
 	public static function createFolderAsync(folderPath:String, ?onSuccess:Void->Void, ?onError:Dynamic->Void):Void {
 		enqueueAsync(() -> {
 			try {
@@ -416,6 +565,11 @@ class FileManager {
 		});
 	}
 
+	/**
+	 * Gets the application data path for a specific app.
+	 * @param appName Name of the application.
+	 * @return Path to the app-specific data directory.
+	 */
 	public static function getAppDataPath(appName:String):String {
 		var base:String;
 		#if windows
@@ -436,15 +590,31 @@ class FileManager {
 	
 		return appDataPath;
 	}
-	
-	
+
+	/**
+	 * Logs a file or folder operation.
+	 * @param operation Name of the operation (e.g., "delete", "copy").
+	 * @param path Path involved in the operation.
+	 * @param success Whether the operation succeeded.
+	 */
 	public static function logOperation(operation:String, path:String, success:Bool):Void {
 		trace('${Date.now()}: $operation on $path ${success ? "succeeded" : "failed"}');
 	}
 
+	/**
+	 * Gets the file extension of a file path.
+	 * @param filePath Path of the file.
+	 * @return Lowercase file extension (without dot).
+	 */
 	public static function getFileExtension(filePath:String):String
 		return Path.extension(filePath).toLowerCase();
 
+	/**
+	 * Searches files asynchronously by pattern.
+	 * @param folderPath Folder to search in.
+	 * @param pattern String pattern to match in file names.
+	 * @param onResult Callback called with array of matching file paths.
+	 */
 	public static function searchFilesAsync(folderPath:String, pattern:String, onResult:Array<String>->Void):Void {
 		enqueueAsync(() -> {
 			var result:Array<String> = [];
@@ -466,6 +636,12 @@ class FileManager {
 		});
 	}
 
+	/**
+	 * Creates a temporary file.
+	 * @param prefix Optional filename prefix.
+	 * @param suffix Optional filename suffix.
+	 * @return Full path to the created temporary file.
+	 */
 	public static function createTempFile(prefix:String = "tmp_", suffix:String = ""):String {
 		var base = Sys.getEnv("TMPDIR");
 		if (base == null) {
@@ -483,6 +659,11 @@ class FileManager {
 		return path;
 	}
 
+	/**
+	 * Creates a temporary folder.
+	 * @param prefix Optional folder name prefix.
+	 * @return Full path to the created temporary folder.
+	 */
 	public static function createTempFolder(prefix:String = "tmp_"):String {
 		var base = Sys.getEnv("TMPDIR");
 		if (base == null) {
@@ -500,7 +681,11 @@ class FileManager {
 		return path;
 	}
 
-
+	/**
+	 * Safely writes a file by backing up existing content.
+	 * @param filePath Path of the file.
+	 * @param content Content to write.
+	 */
 	public static function safeWrite(filePath:String, content:String):Void {
 		var startTime = Timer.stamp();
 		if (fileExists(filePath)) 
@@ -510,6 +695,11 @@ class FileManager {
 		trace("File safely written to: " + filePath + " in " + elapsedTime + " seconds");
 	}
 
+	/**
+	 * Requests administrator privileges.
+	 * @param onSuccess Optional callback when elevation succeeds.
+	 * @param onError Optional callback on error.
+	 */
 	public static function requestAdmin(?onSuccess:Void->Void, ?onError:Dynamic->Void):Void {
 		enqueueAsync(() -> {
 			try {
@@ -550,6 +740,10 @@ class FileManager {
 		});
 	}
 
+	/**
+	 * Gets the platform name.
+	 * @return "Windows", "Mac", "Linux", or "unknown".
+	 */
 	public static function getPlatformName():String {
 		#if (windows || mac || linux)
 		return Sys.systemName();

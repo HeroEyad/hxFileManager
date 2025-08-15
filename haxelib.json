@@ -13,8 +13,8 @@
         "utilities"
     ],
     "description": "hxFileManager is a Cross-Platform library designed for file management tasks in Haxe. It provides a consistent and straightforward API for file operations, making it easy for developers to manage files. The library is lightweight, easy to use, and maintains compatibility with Haxe's ecosystem.",
-    "version": "1.3.2",
-    "releasenote": "Proper Linux Support, Removed Mobile (will be added later), Fixed Bugs, New Temp Folder & File Create Functions and Improved Performance",
+    "version": "1.3.3",
+    "releasenote": "Added Parameters.",
     "contributors": [
         "HeroEyad"
     ],

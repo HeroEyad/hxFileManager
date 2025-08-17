@@ -38,9 +38,6 @@ import hxFileManager.FileManager;
 
 class Main {
         static function main() {
-                // Initialize the thread pool (required for proper operation)
-                FileManager.initThreadPool();
-                
                 // Perform file operations
                 FileManager.copyFile("source.txt", "destination");
                 FileManager.copyFolder("folder", "destination");

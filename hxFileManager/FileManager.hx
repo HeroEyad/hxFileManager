@@ -11,6 +11,8 @@ import sys.io.Process;
 #if cpp
 import sys.thread.Mutex;
 #end
+import hxFileManager.HttpManager;
+import hxFileManager.utils.*;
 
 class FileManager {
 	#if (windows || mac || linux)
@@ -29,7 +31,7 @@ class FileManager {
 	static var numThreads:Int = 4;
 	static var initialized = false;
 
-	public static function initThreadPool():Void {
+	static function __init__():Void {
 		if (initialized) return;
 		initialized = true;
 
@@ -37,7 +39,7 @@ class FileManager {
 			var thread = Thread.create(() -> {
 				Thread.runWithEventLoop(() -> {
 					var msg = Thread.readMessage(true);
-					if (Std.is(msg, Task)) {
+					if (Std.isOfType(msg, Task)) {
 						try cast(msg, Task).run() catch (e) trace("Task error: " + e);
 					}
 				});
@@ -49,7 +51,7 @@ class FileManager {
 	static var roundRobinIndex = 0;
 
 	/**
-	 * Enqueue a function to run asynchronously on a worker thread.
+	 * Enqueue a function to run asynchronously on a worker thread. (This can be used for other stuff than hxFileManager.)
 	 * @param fn Function to execute.
 	 */
 	public static function enqueueAsync(fn:Void->Void):Void {
@@ -70,6 +72,7 @@ class FileManager {
 	 * @param filePath Path where the file will be created.
 	 * @param content Content to write to the file.
 	 */
+	@:deprecated("Use createFileAsync instead")
 	public static function createFile(filePath:String, content:String):Void {
 		try {
 			File.saveContent(filePath, content);
@@ -751,4 +754,32 @@ class FileManager {
 		return "unknown";
 		#end
 	}
+
+	/** 
+	 * Download a file with optional headers and progress callback.
+	 * @param url The file URL.
+	 * @param savePath Local path to save the file.
+	 * @param headers Optional HTTP headers.
+	 * @param onProgress Optional progress callback: (bytesDownloaded, totalBytes) -> Void
+	 * @param retries Number of retries if download fails (default 3)
+	 */
+	public static function downloadFile(url:String, savePath:String, ?headers:Map<String, String>, ?onProgress:(Int, Int) -> Void, ?retries:Int = 3):Void
+	{
+		for (attempt in 0...retries)
+		{
+			try
+			{
+				var bytes = HttpManager.requestBytes(url, headers, 5, onProgress);
+				File.saveBytes(savePath, bytes);
+				return; // success
+			}
+			catch (e:Dynamic)
+			{
+				trace('Download attempt ${attempt + 1} failed: $e');
+				if (attempt == retries - 1)
+					throw e; // rethrow on final failure
+			}
+		}
+	}
+
 }

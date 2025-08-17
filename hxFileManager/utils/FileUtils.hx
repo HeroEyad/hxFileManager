@@ -1,4 +1,4 @@
-package hxFileManager;
+package hxFileManager.utils;
 
 #if windows
 

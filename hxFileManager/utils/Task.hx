@@ -1,4 +1,4 @@
-package hxFileManager;
+package hxFileManager.utils;
 
 class Task {
 	public final run:Void->Void;

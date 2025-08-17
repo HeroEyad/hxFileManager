@@ -1,15 +1,16 @@
 package tools;
 
-import hxFileManager.FileManager;
+import hxFileManager.*;
+import haxe.io.Bytes;
 
 class Main {
     static function main() {
         trace("=== FileManager Test Started ===");
+        var done = false;
+        
+        //trace("It's running a threadPool!");
 
-        FileManager.initThreadPool();
-        trace("It's running a threadPool!");
-
-        trace("User is on " + FileManager.getPlatformName());
+        //trace("User is on " + FileManager.getPlatformName());
 
         /*if (!FileManager.isAdmin) { // try it out yourself
             trace("Not an Admin, Requesting Admin!");
@@ -21,11 +22,11 @@ class Main {
             });
             } catch (e:Dynamic) {
             trace("Error occurred while requesting admin: " + e);
-            }
-        }*/
+            */
+
         trace("Running as admin: " + FileManager.isAdmin);
 
-        var testFile = "test.txt";
+        /*var testFile = "test.txt";
         var testFolder = "testFolder";
         var renamedFile = "renamed.txt";
         var copiedFile = "copy.txt";
@@ -58,12 +59,42 @@ class Main {
                 FileManager.logOperation("Read JSON", jsonPath, json != null);
                 trace("Read JSON Content: " + json);
         });
+        */
+        try {
+            trace("Checking internet...");
+            if (HttpManager.hasInternet) {
+                trace("Internet is available!");
+            } else {
+                trace("No internet connection detected.");
+            }
+        } catch (e:Dynamic) {
+            trace("Error checking internet: " + Std.string(e));
+        }
 
-		FileManager.searchFilesAsync(".", ".txt", (results) -> {
-			FileManager.logOperation("Search Files", ".", results.length > 0);
-			trace("Search Results: " + results);
+        try {
+            trace("Requesting text from http://google.com ...");
+            var text:String = HttpManager.requestText("http://google.com");
+            trace("Received text (first 100 chars): " + text.substr(0, Std.int(Math.min(100, text.length))));        
+        } catch (e:Dynamic) {
+            trace("Error fetching text: " + Std.string(e));
+        }
+        
+        try {
+            trace("Requesting a URL that redirects (http://google.com) ...");
+            var redirectedText:String = HttpManager.requestText("http://google.com");
+            trace("Redirect test succeeded, first 100 chars: " + redirectedText.substr(0, Std.int(Math.min(100, redirectedText.length))));
+        } catch (e:Dynamic) {
+            trace("Redirect test failed: " + Std.string(e));
+        }
+
+		trace("Starting download...");
+		
+		FileManager.downloadFile("https://i.kym-cdn.com/entries/icons/facebook/000/048/280/speed_trying_not_to_laugh.jpg",
+			"plsspeedineedthis.jpg", null, function(downloaded:Int, total:Int)
+		{
+			trace('Downloaded $downloaded / $total bytes');
 		});
-		FileManager.safeWrite("safe.txt", "Safe write content");
+		/*FileManager.safeWrite("safe.txt", "Safe write content");
 		FileManager.logOperation("Safe Write", "safe.txt", FileManager.fileExists("safe.txt"));
 
 		// unsure if this does anything
@@ -71,8 +102,10 @@ class Main {
 		FileManager.logOperation("Delete File", copiedFile, !FileManager.fileExists(copiedFile));
 
 		FileManager.deleteFolder(testFolder);
-		FileManager.logOperation("Delete Folder", testFolder, !FileManager.folderExists(testFolder));
+		FileManager.logOperation("Delete Folder", testFolder, !FileManager.folderExists(testFolder));*/
+        
 
+		trace("Download finished!");
 		done = true;
         while (!done) Sys.sleep(0.1);
 

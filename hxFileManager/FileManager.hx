@@ -31,7 +31,7 @@ class FileManager {
 	static var numThreads:Int = 4;
 	static var initialized = false;
 
-	static function __init__():Void {
+	public static function initThreadPool():Void {
 		if (initialized) return;
 		initialized = true;
 

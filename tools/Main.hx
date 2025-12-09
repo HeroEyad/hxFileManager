@@ -89,11 +89,21 @@ class Main {
 
 		trace("Starting download...");
 		
-		FileManager.downloadFile("https://i.kym-cdn.com/entries/icons/facebook/000/048/280/speed_trying_not_to_laugh.jpg",
+		/*FileManager.downloadFile("https://i.kym-cdn.com/entries/icons/facebook/000/048/280/speed_trying_not_to_laugh.jpg",
 			"plsspeedineedthis.jpg", null, function(downloaded:Int, total:Int)
 		{
 			trace('Downloaded $downloaded / $total bytes');
+		});*/
+
+		HttpManager.postJSON("https://discord.com/api/webhooks/1447350219242209383/H4khDMwqrdw09YkPLeMHznUgxry8nI8QbdGrRp_YQj_gPvIEHNFzKf4JhAZepN_Xzqu3",
+			{content: "Hello from Haxe!"}, null, null, function(response)
+		{
+			trace("Webhook sent successfully: " + response);
+		}, function(error)
+		{
+			trace("Failed to send webhook: " + error);
 		});
+
 		/*FileManager.safeWrite("safe.txt", "Safe write content");
 		FileManager.logOperation("Safe Write", "safe.txt", FileManager.fileExists("safe.txt"));
 
@@ -105,7 +115,7 @@ class Main {
 		FileManager.logOperation("Delete Folder", testFolder, !FileManager.folderExists(testFolder));*/
         
 
-		trace("Download finished!");
+		//trace("Download finished!");
 		done = true;
         while (!done) Sys.sleep(0.1);
 

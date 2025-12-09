@@ -84,6 +84,34 @@ class HttpManager {
             return requestText("https://example.com") != null;
         } catch (e:Dynamic) return false;
     }
+
+	public static function postJSON(url:String, data:Dynamic, ?headers:Map<String, String>, ?onProgress:(Int, Int) -> Void, ?onComplete:(String) -> Void, ?onFail:(String) -> Void):Void
+	{
+		var h = new Http(url);
+		
+		h.setHeader("Content-Type", "application/json");
+		h.setHeader("User-Agent", "hxFileManager");
+		
+		if (headers != null)
+			for (k in headers.keys())
+				h.setHeader(k, headers.get(k));
+				
+		h.setPostData(haxe.Json.stringify(data));
+		
+		h.onData = function(d:String)
+		{
+			if (onComplete != null)
+				onComplete(d);
+		};
+		
+		h.onError = function(msg:String)
+		{
+			if (onFail != null)
+				onFail(msg);
+		};
+		
+		h.request(true); // async
+	}
 }
 
 private class HttpError {

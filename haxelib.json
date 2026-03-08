@@ -5,16 +5,20 @@
     "tags": [
         "cross",
         "cpp",
-        "haxe",
+        "sys",
+        "file",
+        "filesystem",
+        "io",
+        "async",
+        "http",
+        "utility",
         "windows",
         "linux",
-        "utility",
-        "util",
-        "utilities"
+        "mac"
     ],
-    "description": "hxFileManager is a Cross-Platform library designed for file management tasks in Haxe. It provides a consistent and straightforward API for file operations, making it easy for developers to manage files. The library is lightweight, easy to use, and maintains compatibility with Haxe's ecosystem.",
-    "version": "1.3.6",
-    "releasenote": "initThreadPool is back because __init__ doesn't work somehow",
+    "description": "hxFileManager is a cross-platform file management library for Haxe with a clean async API backed by a native thread pool. Covers file read/write/append/prepend/truncate, safe atomic writes, raw bytes and Base64 I/O, JSON read/write/patch, folder create/copy/move/delete, recursive listing and deep search (by name, extension, or content), empty-folder cleanup, file and folder watchers, file metadata (size, mtime, MD5, SHA-256), file comparison, unique name generation, temp file/folder creation, batch operations (read, write, copy, move, delete), and HTTP downloads with retry and progress. HttpManager adds GET/POST/PUT/PATCH/DELETE, JSON requests, redirect following, status codes, response headers, internet detection, and retry logic.",
+    "version": "1.4.0",
+    "releasenote": "Thread pool rework: init() is now explicit (call FileManager.init() before any async operation). Added prependFileAsync, truncateFileAsync, patchJsonAsync, writeLinesAsync, readLinesAsync, writeFileBase64Async, readFileBase64Async, hashFileMd5Async, hashFileSha256Async, compareFilesAsync, duplicateFileAsync, listFilesDeepAsync, listFoldersAsync, countFilesAsync, searchFilesAsync, searchByExtensionAsync, searchByContentAsync, cleanEmptyFoldersAsync, generateUniqueFileNameAsync, createTempFileAsync, createTempFolderAsync, batchReadAsync, batchWriteAsync, batchCopyAsync, batchMoveAsync, batchDeleteAsync, watchFile, stopWatcher. HttpManager gains putJson, patchJson, delete, getResponseHeaders, hasBytes, requestWithRetry, checkInternetAsync, and redirect following on all request methods.",
     "contributors": [
         "HeroEyad"
     ],

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HttpManager - HxFileManager API Documentation</title>
+<style>
+:root {
+	--bg: #16181d; --fg: #d4d7dd; --muted: #8b93a1;
+	--header: #0d0f12; --header2: #151a22; --accent: #4fa3ff;
+	--sidebar: #1b1e24; --border: #2a2e37;
+	--sig-bg: #1e222a; --kw: #ff7b72; --type: #d2a8ff; --fname: #79c0ff;
+	--dep-bg: #2b2413; --dep-border: #6b5518;
+	font-size: 15px;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; color: var(--fg); background: var(--bg); }
+code, .sig, .search { font-family: "JetBrains Mono", Consolas, Menlo, monospace; }
+::selection { background: #2b4a75; }
+
+header {
+	background: linear-gradient(180deg, var(--header) 0%, var(--header2) 100%);
+	color: #fff;
+	padding: 14px 24px;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	border-bottom: 1px solid var(--border);
+}
+
+header .logo {
+	width: 48px;
+	height: auto;
+	flex-shrink: 0;
+	image-rendering: auto;
+}
+
+header h1 {
+	font-size: 18px;
+	margin: 0;
+	font-weight: 600;
+	letter-spacing: .3px;
+}
+
+header h1 a {
+	color: #fff;
+	text-decoration: none;
+}
+
+header .sub {
+	display: block;
+	color: #6d7686;
+	font-size: 13px;
+	margin-top: 2px;
+}
+
+.layout { display: flex; min-height: calc(100vh - 50px); }
+
+nav {
+	width: 270px; flex-shrink: 0; background: var(--sidebar);
+	border-right: 1px solid var(--border); padding: 16px 0;
+	position: sticky; top: 50px; height: calc(100vh - 50px); overflow-y: auto;
+}
+nav .search {
+	display: block; width: calc(100% - 32px); margin: 0 16px 14px;
+	padding: 7px 10px; border: 1px solid var(--border); border-radius: 5px;
+	font-size: 13px; outline: none; background: #14161b; color: var(--fg);
+}
+nav .search::placeholder { color: #5b6272; }
+nav .search:focus { border-color: var(--accent); }
+nav .pkg { padding: 4px 16px; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .6px; }
+nav ul { list-style: none; margin: 0 0 12px; padding: 0; }
+nav li a {
+	display: block; padding: 5px 16px 5px 28px; color: var(--fg);
+	text-decoration: none; font-size: 14px; border-left: 3px solid transparent;
+}
+nav li a:hover { background: #23272f; }
+nav li a.active { border-left-color: var(--accent); background: #23272f; font-weight: 600; }
+nav li .k { color: var(--muted); font-size: 11px; margin-right: 6px; }
+nav .mem { display: none; margin: 0; }
+nav li.expanded > .mem { display: block; }
+nav .mem > li { display: none; }
+nav .mem > li.mhit { display: block; }
+nav .mem > li > a {
+	padding: 3px 16px 3px 44px; font-size: 12.5px; color: var(--muted);
+	font-family: Consolas, Menlo, monospace;
+}
+nav .mem > li > a:hover { color: var(--fg); }
+
+main { flex: 1; padding: 28px 40px 80px; max-width: 1000px; }
+main h1.classname { font-size: 26px; margin: 0 0 2px; font-weight: 600; color: #fff; }
+main .pkgline { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+main .pkgline code { color: #a5b4c8; }
+main .classdoc { margin-bottom: 26px; line-height: 1.6; }
+main h2.section {
+	font-size: 13px; text-transform: uppercase; letter-spacing: .8px;
+	color: var(--muted); border-bottom: 1px solid var(--border);
+	padding-bottom: 6px; margin: 34px 0 6px;
+}
+
+.field { padding: 16px 0 18px; border-bottom: 1px solid var(--border); }
+.field:target { background: #22262e; margin: 0 -14px; padding-left: 14px; padding-right: 14px; border-radius: 6px; }
+.sig {
+	background: var(--sig-bg); border: 1px solid var(--border); border-radius: 6px;
+	padding: 10px 14px; font-size: 13.5px; overflow-x: auto; white-space: pre-wrap; word-break: break-word;
+}
+.fold { margin: 0; }
+summary.sig { list-style: none; cursor: pointer; position: relative; padding-left: 30px; }
+summary.sig::-webkit-details-marker { display: none; }
+summary.sig::before {
+	content: ""; position: absolute; left: 13px; top: 16px;
+	width: 0; height: 0;
+	border-left: 6px solid var(--muted); border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+	transition: transform .12s ease;
+}
+.fold[open] summary.sig::before { transform: rotate(90deg); border-left-color: var(--accent); }
+summary.sig:hover { border-color: #3a4150; }
+summary.sig:hover::before { border-left-color: var(--fg); }
+.fold[open] summary.sig { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom-color: transparent; }
+.fold .srccode { border-top-left-radius: 0; border-top-right-radius: 0; margin-top: 0; }
+.kw { color: var(--kw); } .type { color: var(--type); text-decoration: none; }
+a.type:hover { text-decoration: underline; }
+.fname { color: var(--fname); font-weight: 600; } .arg { color: #e6edf3; }
+.opt, .def { color: var(--muted); }
+
+.fdoc { margin: 10px 2px 0; line-height: 1.55; }
+.fdoc p { margin: 0 0 8px; }
+table.params { border-collapse: collapse; margin: 10px 0 0; font-size: 13.5px; width: 100%; }
+table.params td { border: 1px solid var(--border); padding: 6px 10px; vertical-align: top; }
+table.params td.pn { font-family: Consolas, Menlo, monospace; color: var(--fname); white-space: nowrap; width: 1%; }
+table.params td.pt { font-family: Consolas, Menlo, monospace; color: var(--type); white-space: nowrap; width: 1%; }
+.returns { margin-top: 8px; font-size: 13.5px; }
+.returns b { color: var(--muted); font-weight: 600; }
+
+.srccode {
+	margin: 0; background: #14171c; border: 1px solid var(--border); border-radius: 6px;
+	padding: 12px 14px; font-size: 12.5px; line-height: 1.5; overflow-x: auto;
+	tab-size: 4; color: #cdd3dc;
+	font-family: "JetBrains Mono", Consolas, Menlo, monospace;
+}
+.srccode .c { color: #6d7686; font-style: italic; }
+.srccode .s { color: #a5d6a7; }
+.srccode .num { color: #f0b26b; }
+.srccode .kw { color: var(--kw); }
+.srccode .type { color: var(--type); }
+
+.badge {
+	display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px;
+	vertical-align: middle; margin-left: 8px; font-weight: 600;
+}
+.badge.dep { background: var(--dep-bg); border: 1px solid var(--dep-border); color: #d9b44a; }
+.depnote {
+	background: var(--dep-bg); border: 1px solid var(--dep-border);
+	border-radius: 6px; padding: 8px 12px; margin: 8px 0 0; font-size: 13.5px; color: #d9c17a;
+}
+
+.toc { columns: 2; column-gap: 40px; margin: 8px 0 0; padding: 0; list-style: none; font-size: 13.5px; }
+.toc li { margin: 3px 0; break-inside: avoid; }
+.toc a { color: var(--fname); text-decoration: none; font-family: Consolas, Menlo, monospace; }
+.toc a:hover { text-decoration: underline; }
+.toc .dep-toc { opacity: .55; }
+
+.index-list { list-style: none; padding: 0; }
+.index-list li { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.index-list a { font-size: 17px; color: var(--fname); text-decoration: none; font-weight: 600; }
+.index-list a:hover { text-decoration: underline; }
+.index-list .d { color: var(--muted); font-size: 13.5px; margin-top: 3px; line-height: 1.5; }
+.hidden { display: none; }
+footer { color: var(--muted); font-size: 12px; margin-top: 60px; }
+
+nav::-webkit-scrollbar, body::-webkit-scrollbar { width: 10px; }
+nav::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb { background: #2e333d; border-radius: 5px; }
+nav::-webkit-scrollbar-track, body::-webkit-scrollbar-track { background: transparent; }
+
+@media (max-width: 760px) {
+	.layout { flex-direction: column; }
+	nav { width: 100%; height: auto; position: static; }
+	main { padding: 20px 18px 60px; }
+	.toc { columns: 1; }
+}
+</style>
+</head>
+<body>
+<header>
+	<img class="logo" src="hxfilemanagerlogo.png" alt="HxFileManager Logo">
+	<div>
+		<h1><a href="index.html">HxFileManager API Documentation</a></h1>
+		<span class="sub">API documentation</span>
+	</div>
+</header>
+<div class="layout">
+<nav>
+<input class="search" type="text" placeholder="Filter classes...">
+<div class="pkg">hxFileManager</div><ul><li data-name="FileManager"><a href="FileManager.html"><span class="k">C</span>FileManager</a><ul class="mem"><li data-name="rootDir"><a href="FileManager.html#rootDir">rootDir</a></li><li data-name="isAdmin"><a href="FileManager.html#isAdmin">isAdmin</a></li><li data-name="init"><a href="FileManager.html#init">init</a></li><li data-name="dispose"><a href="FileManager.html#dispose">dispose</a></li><li data-name="enqueueAsync"><a href="FileManager.html#enqueueAsync">enqueueAsync</a></li><li data-name="fileExists"><a href="FileManager.html#fileExists">fileExists</a></li><li data-name="folderExists"><a href="FileManager.html#folderExists">folderExists</a></li><li data-name="fileExistsAsync"><a href="FileManager.html#fileExistsAsync">fileExistsAsync</a></li><li data-name="folderExistsAsync"><a href="FileManager.html#folderExistsAsync">folderExistsAsync</a></li><li data-name="readFileAsync"><a href="FileManager.html#readFileAsync">readFileAsync</a></li><li data-name="readFileBytesAsync"><a href="FileManager.html#readFileBytesAsync">readFileBytesAsync</a></li><li data-name="writeFileAsync"><a href="FileManager.html#writeFileAsync">writeFileAsync</a></li><li data-name="writeBytesAsync"><a href="FileManager.html#writeBytesAsync">writeBytesAsync</a></li><li data-name="createFileAsync"><a href="FileManager.html#createFileAsync">createFileAsync</a></li><li data-name="appendFileAsync"><a href="FileManager.html#appendFileAsync">appendFileAsync</a></li><li data-name="prependFileAsync"><a href="FileManager.html#prependFileAsync">prependFileAsync</a></li><li data-name="safeWriteAsync"><a href="FileManager.html#safeWriteAsync">safeWriteAsync</a></li><li data-name="readLinesAsync"><a href="FileManager.html#readLinesAsync">readLinesAsync</a></li><li data-name="writeLinesAsync"><a href="FileManager.html#writeLinesAsync">writeLinesAsync</a></li><li data-name="truncateFileAsync"><a href="FileManager.html#truncateFileAsync">truncateFileAsync</a></li><li data-name="readJsonAsync"><a href="FileManager.html#readJsonAsync">readJsonAsync</a></li><li data-name="writeJsonAsync"><a href="FileManager.html#writeJsonAsync">writeJsonAsync</a></li><li data-name="patchJsonAsync"><a href="FileManager.html#patchJsonAsync">patchJsonAsync</a></li><li data-name="getFileMetadataAsync"><a href="FileManager.html#getFileMetadataAsync">getFileMetadataAsync</a></li><li data-name="getFileSizeAsync"><a href="FileManager.html#getFileSizeAsync">getFileSizeAsync</a></li><li data-name="getFolderSizeAsync"><a href="FileManager.html#getFolderSizeAsync">getFolderSizeAsync</a></li><li data-name="getLastModifiedAsync"><a href="FileManager.html#getLastModifiedAsync">getLastModifiedAsync</a></li><li data-name="getFileExtension"><a href="FileManager.html#getFileExtension">getFileExtension</a></li><li data-name="getFileName"><a href="FileManager.html#getFileName">getFileName</a></li><li data-name="getFileNameWithoutExt"><a href="FileManager.html#getFileNameWithoutExt">getFileNameWithoutExt</a></li><li data-name="getParentDir"><a href="FileManager.html#getParentDir">getParentDir</a></li><li data-name="copyFileAsync"><a href="FileManager.html#copyFileAsync">copyFileAsync</a></li><li data-name="copyFolderAsync"><a href="FileManager.html#copyFolderAsync">copyFolderAsync</a></li><li data-name="moveFileAsync"><a href="FileManager.html#moveFileAsync">moveFileAsync</a></li><li data-name="moveFolderAsync"><a href="FileManager.html#moveFolderAsync">moveFolderAsync</a></li><li data-name="deletePathAsync"><a href="FileManager.html#deletePathAsync">deletePathAsync</a></li><li data-name="duplicateFileAsync"><a href="FileManager.html#duplicateFileAsync">duplicateFileAsync</a></li><li data-name="createFolderAsync"><a href="FileManager.html#createFolderAsync">createFolderAsync</a></li><li data-name="listFilesAsync"><a href="FileManager.html#listFilesAsync">listFilesAsync</a></li><li data-name="listFilesDeepAsync"><a href="FileManager.html#listFilesDeepAsync">listFilesDeepAsync</a></li><li data-name="listFoldersAsync"><a href="FileManager.html#listFoldersAsync">listFoldersAsync</a></li><li data-name="countFilesAsync"><a href="FileManager.html#countFilesAsync">countFilesAsync</a></li><li data-name="searchFilesAsync"><a href="FileManager.html#searchFilesAsync">searchFilesAsync</a></li><li data-name="searchByExtensionAsync"><a href="FileManager.html#searchByExtensionAsync">searchByExtensionAsync</a></li><li data-name="searchByContentAsync"><a href="FileManager.html#searchByContentAsync">searchByContentAsync</a></li><li data-name="cleanEmptyFoldersAsync"><a href="FileManager.html#cleanEmptyFoldersAsync">cleanEmptyFoldersAsync</a></li><li data-name="watchFolder"><a href="FileManager.html#watchFolder">watchFolder</a></li><li data-name="watchFile"><a href="FileManager.html#watchFile">watchFile</a></li><li data-name="stopWatcher"><a href="FileManager.html#stopWatcher">stopWatcher</a></li><li data-name="stopWatchingFolder"><a href="FileManager.html#stopWatchingFolder">stopWatchingFolder</a></li><li data-name="generateUniqueFileNameAsync"><a href="FileManager.html#generateUniqueFileNameAsync">generateUniqueFileNameAsync</a></li><li data-name="createTempFileAsync"><a href="FileManager.html#createTempFileAsync">createTempFileAsync</a></li><li data-name="createTempFolderAsync"><a href="FileManager.html#createTempFolderAsync">createTempFolderAsync</a></li><li data-name="downloadFileAsync"><a href="FileManager.html#downloadFileAsync">downloadFileAsync</a></li><li data-name="hashFileMd5Async"><a href="FileManager.html#hashFileMd5Async">hashFileMd5Async</a></li><li data-name="hashFileSha256Async"><a href="FileManager.html#hashFileSha256Async">hashFileSha256Async</a></li><li data-name="compareFilesAsync"><a href="FileManager.html#compareFilesAsync">compareFilesAsync</a></li><li data-name="readFileBase64Async"><a href="FileManager.html#readFileBase64Async">readFileBase64Async</a></li><li data-name="writeFileBase64Async"><a href="FileManager.html#writeFileBase64Async">writeFileBase64Async</a></li><li data-name="batchDeleteAsync"><a href="FileManager.html#batchDeleteAsync">batchDeleteAsync</a></li><li data-name="batchCopyAsync"><a href="FileManager.html#batchCopyAsync">batchCopyAsync</a></li><li data-name="batchMoveAsync"><a href="FileManager.html#batchMoveAsync">batchMoveAsync</a></li><li data-name="batchReadAsync"><a href="FileManager.html#batchReadAsync">batchReadAsync</a></li><li data-name="batchWriteAsync"><a href="FileManager.html#batchWriteAsync">batchWriteAsync</a></li><li data-name="requestAdmin"><a href="FileManager.html#requestAdmin">requestAdmin</a></li><li data-name="getPlatformName"><a href="FileManager.html#getPlatformName">getPlatformName</a></li><li data-name="getAppDataPath"><a href="FileManager.html#getAppDataPath">getAppDataPath</a></li><li data-name="logOperation"><a href="FileManager.html#logOperation">logOperation</a></li><li data-name="createFile"><a href="FileManager.html#createFile">createFile</a></li><li data-name="readFile"><a href="FileManager.html#readFile">readFile</a></li><li data-name="readJson"><a href="FileManager.html#readJson">readJson</a></li><li data-name="writeJson"><a href="FileManager.html#writeJson">writeJson</a></li><li data-name="deletePath"><a href="FileManager.html#deletePath">deletePath</a></li><li data-name="safeWrite"><a href="FileManager.html#safeWrite">safeWrite</a></li><li data-name="copyFolderRecursive"><a href="FileManager.html#copyFolderRecursive">copyFolderRecursive</a></li><li data-name="getFileSize"><a href="FileManager.html#getFileSize">getFileSize</a></li><li data-name="getFolderSize"><a href="FileManager.html#getFolderSize">getFolderSize</a></li><li data-name="listFiles"><a href="FileManager.html#listFiles">listFiles</a></li><li data-name="copyFile"><a href="FileManager.html#copyFile">copyFile</a></li><li data-name="moveFolder"><a href="FileManager.html#moveFolder">moveFolder</a></li><li data-name="renameFile"><a href="FileManager.html#renameFile">renameFile</a></li><li data-name="renameFolder"><a href="FileManager.html#renameFolder">renameFolder</a></li><li data-name="deleteFile"><a href="FileManager.html#deleteFile">deleteFile</a></li><li data-name="deleteFolder"><a href="FileManager.html#deleteFolder">deleteFolder</a></li><li data-name="createFolder"><a href="FileManager.html#createFolder">createFolder</a></li><li data-name="generateUniqueFileName"><a href="FileManager.html#generateUniqueFileName">generateUniqueFileName</a></li><li data-name="getFileMetadata"><a href="FileManager.html#getFileMetadata">getFileMetadata</a></li></ul></li><li data-name="FileWatcher"><a href="FileWatcher.html"><span class="k">C</span>FileWatcher</a><ul class="mem"><li data-name="folder"><a href="FileWatcher.html#folder">folder</a></li><li data-name="file"><a href="FileWatcher.html#file">file</a></li><li data-name="stop"><a href="FileWatcher.html#stop">stop</a></li></ul></li><li data-name="HttpError"><a href="HttpError.html"><span class="k">C</span>HttpError</a><ul class="mem"><li data-name="url"><a href="HttpError.html#url">url</a></li><li data-name="status"><a href="HttpError.html#status">status</a></li><li data-name="redirected"><a href="HttpError.html#redirected">redirected</a></li><li data-name="new"><a href="HttpError.html#new">new</a></li><li data-name="toString"><a href="HttpError.html#toString">toString</a></li></ul></li><li data-name="HttpManager"><a href="HttpManager.html" class="active"><span class="k">C</span>HttpManager</a><ul class="mem"><li data-name="hasInternet"><a href="HttpManager.html#hasInternet">hasInternet</a></li><li data-name="defaultUserAgent"><a href="HttpManager.html#defaultUserAgent">defaultUserAgent</a></li><li data-name="defaultTimeout"><a href="HttpManager.html#defaultTimeout">defaultTimeout</a></li><li data-name="requestText"><a href="HttpManager.html#requestText">requestText</a></li><li data-name="requestBytes"><a href="HttpManager.html#requestBytes">requestBytes</a></li><li data-name="postJson"><a href="HttpManager.html#postJson">postJson</a></li><li data-name="postForm"><a href="HttpManager.html#postForm">postForm</a></li><li data-name="delete"><a href="HttpManager.html#delete">delete</a></li><li data-name="putJson"><a href="HttpManager.html#putJson">putJson</a></li><li data-name="patchJson"><a href="HttpManager.html#patchJson">patchJson</a></li><li data-name="getJson"><a href="HttpManager.html#getJson">getJson</a></li><li data-name="downloadTo"><a href="HttpManager.html#downloadTo">downloadTo</a></li><li data-name="hasBytes"><a href="HttpManager.html#hasBytes">hasBytes</a></li><li data-name="getStatusCode"><a href="HttpManager.html#getStatusCode">getStatusCode</a></li><li data-name="getResponseHeaders"><a href="HttpManager.html#getResponseHeaders">getResponseHeaders</a></li><li data-name="requestWithRetry"><a href="HttpManager.html#requestWithRetry">requestWithRetry</a></li><li data-name="checkInternet"><a href="HttpManager.html#checkInternet">checkInternet</a></li><li data-name="checkInternetAsync"><a href="HttpManager.html#checkInternetAsync">checkInternetAsync</a></li></ul></li><li data-name="Platform"><a href="Platform.html"><span class="k">C</span>Platform</a><ul class="mem"><li data-name="rootDir"><a href="Platform.html#rootDir">rootDir</a></li><li data-name="rootDir"><a href="Platform.html#rootDir">rootDir</a></li><li data-name="exePath"><a href="Platform.html#exePath">exePath</a></li><li data-name="isAdmin"><a href="Platform.html#isAdmin">isAdmin</a></li><li data-name="requestAdmin"><a href="Platform.html#requestAdmin">requestAdmin</a></li><li data-name="getPlatformName"><a href="Platform.html#getPlatformName">getPlatformName</a></li><li data-name="getAppDataPath"><a href="Platform.html#getAppDataPath">getAppDataPath</a></li></ul></li><li data-name="WorkerPool"><a href="WorkerPool.html"><span class="k">C</span>WorkerPool</a><ul class="mem"><li data-name="running"><a href="WorkerPool.html#running">running</a></li><li data-name="init"><a href="WorkerPool.html#init">init</a></li><li data-name="dispose"><a href="WorkerPool.html#dispose">dispose</a></li><li data-name="enqueue"><a href="WorkerPool.html#enqueue">enqueue</a></li><li data-name="mainThread"><a href="WorkerPool.html#mainThread">mainThread</a></li></ul></li></ul><div class="pkg">hxFileManager.utils</div><ul><li data-name="FileUtils"><a href="FileUtils.html"><span class="k">C</span>FileUtils</a><ul class="mem"><li data-name="isUserAdmin"><a href="FileUtils.html#isUserAdmin">isUserAdmin</a></li><li data-name="requestAdmin"><a href="FileUtils.html#requestAdmin">requestAdmin</a></li></ul></li></ul>
+</nav>
+<main>
+<h1 class="classname">HttpManager</h1><div class="pkgline">class - package <code>hxFileManager</code></div><h2 class="section">Members</h2><ul class="toc"><li><a href="#hasInternet">hasInternet</a></li><li><a href="#defaultUserAgent">defaultUserAgent</a></li><li><a href="#defaultTimeout">defaultTimeout</a></li><li><a href="#requestText">requestText</a></li><li><a href="#requestBytes">requestBytes</a></li><li><a href="#postJson">postJson</a></li><li><a href="#postForm">postForm</a></li><li><a href="#delete">delete</a></li><li><a href="#putJson">putJson</a></li><li><a href="#patchJson">patchJson</a></li><li><a href="#getJson">getJson</a></li><li><a href="#downloadTo">downloadTo</a></li><li><a href="#hasBytes">hasBytes</a></li><li><a href="#getStatusCode">getStatusCode</a></li><li><a href="#getResponseHeaders">getResponseHeaders</a></li><li><a href="#requestWithRetry">requestWithRetry</a></li><li><a href="#checkInternet">checkInternet</a></li><li><a href="#checkInternetAsync">checkInternetAsync</a></li></ul><h2 class="section">Variables</h2><div class="field" id="hasInternet"><div class="sig"><span class="kw">static</span> <span class="kw">var</span> <span class="fname">hasInternet</span>:<span class="type">Bool</span></div></div><div class="field" id="defaultUserAgent"><div class="sig"><span class="kw">static</span> <span class="kw">var</span> <span class="fname">defaultUserAgent</span>:<span class="type">String</span></div></div><div class="field" id="defaultTimeout"><div class="sig"><span class="kw">static</span> <span class="kw">var</span> <span class="fname">defaultTimeout</span>:<span class="type">Int</span></div></div><h2 class="section">Functions</h2><div class="field" id="requestText"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">requestText</span>(<span class="arg">url</span>:<span class="type">String</span>, <span class='opt'>?</span><span class="arg">headers</span>:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, <span class="arg">maxRedirects</span>:<span class="type">Int</span><span class="def"> = 5</span>, <span class='opt'>?</span><span class="arg">onProgress</span>:(<span class="type">Int</span>, <span class="type">Int</span>)-&gt;<span class="type">Void</span>):<span class="type">String</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> requestText(url:<span class="type">String</span>, ?headers:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, maxRedirects:<span class="type">Int</span> = <span class="num">5</span>, ?onProgress:(<span class="type">Int</span>, <span class="type">Int</span>)-&gt;<span class="type">Void</span>):<span class="type">String</span>
+		<span class="kw">return</span> requestBytes(url, headers, maxRedirects, onProgress).toString();</pre></details><div class="fdoc"><p>Request text from a URL.</p></div><table class="params"><tr><td class="pn">url</td><td class="pt">String</td><td>Target URL.</td></tr><tr><td class="pn">?headers</td><td class="pt">Map&lt;String, String&gt;</td><td>Optional headers.</td></tr><tr><td class="pn">maxRedirects</td><td class="pt">Int</td><td>Max redirects to follow (default 5).</td></tr><tr><td class="pn">?onProgress</td><td class="pt">(Int, Int)-&gt;Void</td><td>Optional progress callback (downloaded, total).</td></tr></table></div><div class="field" id="requestBytes"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">requestBytes</span>(<span class="arg">url</span>:<span class="type">String</span>, <span class='opt'>?</span><span class="arg">headers</span>:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, <span class="arg">maxRedirects</span>:<span class="type">Int</span><span class="def"> = 5</span>, <span class='opt'>?</span><span class="arg">onProgress</span>:(<span class="type">Int</span>, <span class="type">Int</span>)-&gt;<span class="type">Void</span>):<span class="type">Bytes</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> requestBytes(url:<span class="type">String</span>, ?headers:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, maxRedirects:<span class="type">Int</span> = <span class="num">5</span>, ?onProgress:(<span class="type">Int</span>, <span class="type">Int</span>)-&gt;<span class="type">Void</span>):<span class="type">Bytes</span> {
+		<span class="kw">if</span> (maxRedirects &lt; <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> <span class="type">HttpError</span>(<span class="s">"Too many redirects"</span>, url);
+
+		<span class="kw">var</span> result:<span class="type">Bytes</span> = <span class="kw">null</span>;
+		<span class="kw">var</span> error:<span class="type">HttpError</span> = <span class="kw">null</span>;
+		<span class="kw">var</span> statusCode:<span class="type">Int</span> = -<span class="num">1</span>;
+
+		<span class="kw">var</span> h = buildRequest(url, headers);
+
+		h.onBytes = (data:<span class="type">Bytes</span>) -&gt; {
+			result = data;
+			<span class="kw">if</span> (onProgress != <span class="kw">null</span>) onProgress(data.length, data.length);
+		};
+		h.onError = (msg:<span class="type">String</span>) -&gt; error = <span class="kw">new</span> <span class="type">HttpError</span>(msg, url);
+		h.onStatus = (code:<span class="type">Int</span>) -&gt; statusCode = code;
+
+		<span class="kw">try</span> h.request(<span class="kw">false</span>)
+		<span class="kw">catch</span> (e:<span class="type">Dynamic</span>) <span class="kw">throw</span> <span class="kw">new</span> <span class="type">HttpError</span>(<span class="type">Std</span>.string(e), url);
+
+		<span class="kw">if</span> (error != <span class="kw">null</span>) <span class="kw">throw</span> error;
+
+		<span class="kw">if</span> (isRedirect(statusCode)) {
+			<span class="kw">var</span> location = h.responseHeaders != <span class="kw">null</span> ? h.responseHeaders.get(<span class="s">"Location"</span>) : <span class="kw">null</span>;
+			<span class="kw">if</span> (location == <span class="kw">null</span>) <span class="kw">throw</span> <span class="kw">new</span> <span class="type">HttpError</span>(<span class="s">"Redirect missing Location header"</span>, url, statusCode, <span class="kw">true</span>);
+			trace(<span class="s">"[HttpManager] Redirect -&gt; "</span> + location);
+			<span class="kw">return</span> requestBytes(location, headers, maxRedirects - <span class="num">1</span>, onProgress);
+		}
+
+		<span class="kw">if</span> (result == <span class="kw">null</span>) <span class="kw">throw</span> <span class="kw">new</span> <span class="type">HttpError</span>(<span class="s">"Empty response"</span>, url, statusCode);
+		<span class="kw">return</span> result;
+	}</pre></details><div class="fdoc"><p>Request raw bytes from a URL.</p></div><table class="params"><tr><td class="pn">url</td><td class="pt">String</td><td>Target URL.</td></tr><tr><td class="pn">?headers</td><td class="pt">Map&lt;String, String&gt;</td><td>Optional headers.</td></tr><tr><td class="pn">maxRedirects</td><td class="pt">Int</td><td>Max redirects to follow (default 5).</td></tr><tr><td class="pn">?onProgress</td><td class="pt">(Int, Int)-&gt;Void</td><td>Optional progress callback (downloaded, total).</td></tr></table></div><div class="field" id="postJson"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">postJson</span>(<span class="arg">url</span>:<span class="type">String</span>, <span class="arg">data</span>:<span class="type">Dynamic</span>, <span class='opt'>?</span><span class="arg">headers</span>:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, <span class='opt'>?</span><span class="arg">onSuccess</span>:<span class="type">String</span>-&gt;<span class="type">Void</span>, <span class='opt'>?</span><span class="arg">onError</span>:<span class="type">String</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> postJson(url:<span class="type">String</span>, data:<span class="type">Dynamic</span>, ?headers:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, ?onSuccess:<span class="type">String</span>-&gt;<span class="type">Void</span>, ?onError:<span class="type">String</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span> {
+		<span class="kw">var</span> h = buildRequest(url, headers);
+		h.setHeader(<span class="s">"Content-Type"</span>, <span class="s">"application/json"</span>);
+		h.setPostData(<span class="type">Json</span>.stringify(data));
+		h.onData = (d:<span class="type">String</span>) -&gt; <span class="kw">if</span> (onSuccess != <span class="kw">null</span>) onSuccess(d);
+		h.onError = (msg:<span class="type">String</span>) -&gt; <span class="kw">if</span> (onError != <span class="kw">null</span>) onError(msg);
+		<span class="kw">try</span> h.request(<span class="kw">true</span>)
+		<span class="kw">catch</span> (e:<span class="type">Dynamic</span>) <span class="kw">if</span> (onError != <span class="kw">null</span>) onError(<span class="type">Std</span>.string(e));
+	}</pre></details><div class="fdoc"><p>POST JSON data to a URL.</p></div><table class="params"><tr><td class="pn">url</td><td class="pt">String</td><td>Target URL.</td></tr><tr><td class="pn">data</td><td class="pt">Dynamic</td><td>Object to serialise as JSON body.</td></tr><tr><td class="pn">?headers</td><td class="pt">Map&lt;String, String&gt;</td><td>Optional extra headers.</td></tr><tr><td class="pn">?onSuccess</td><td class="pt">String-&gt;Void</td><td>Optional callback with response text.</td></tr><tr><td class="pn">?onError</td><td class="pt">String-&gt;Void</td><td>Optional callback with error message.</td></tr></table></div><div class="field" id="postForm"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">postForm</span>(<span class="arg">url</span>:<span class="type">String</span>, <span class="arg">fields</span>:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, <span class='opt'>?</span><span class="arg">headers</span>:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, <span class='opt'>?</span><span class="arg">onSuccess</span>:<span class="type">String</span>-&gt;<span class="type">Void</span>, <span class='opt'>?</span><span class="arg">onError</span>:<span class="type">String</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> postForm(url:<span class="type">String</span>, fields:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, ?headers:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, ?onSuccess:<span class="type">String</span>-&gt;<span class="type">Void</span>, ?onError:<span class="type">String</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span> {
+		<span class="kw">var</span> h = buildRequest(url, headers);
+		h.setHeader(<span class="s">"Content-Type"</span>, <span class="s">"application/x-www-form-urlencoded"</span>);
+		<span class="kw">var</span> parts:<span class="type">Array</span>&lt;<span class="type">String</span>&gt; = [];
+		<span class="kw">for</span> (k =&gt; v <span class="kw">in</span> fields) parts.push(<span class="type">StringTools</span>.urlEncode(k) + <span class="s">"="</span> + <span class="type">StringTools</span>.urlEncode(v));
+		h.setPostData(parts.join(<span class="s">"&amp;"</span>));
+		h.onData = (d:<span class="type">String</span>) -&gt; <span class="kw">if</span> (onSuccess != <span class="kw">null</span>) onSuccess(d);
+		h.onError = (msg:<span class="type">String</span>) -&gt; <span class="kw">if</span> (onError != <span class="kw">null</span>) onError(msg);
+		<span class="kw">try</span> h.request(<span class="kw">true</span>)
+		<span class="kw">catch</span> (e:<span class="type">Dynamic</span>) <span class="kw">if</span> (onError != <span class="kw">null</span>) onError(<span class="type">Std</span>.string(e));
+	}</pre></details><div class="fdoc"><p>POST form-encoded key-value pairs to a URL.</p></div><table class="params"><tr><td class="pn">url</td><td class="pt">String</td><td>Target URL.</td></tr><tr><td class="pn">fields</td><td class="pt">Map&lt;String, String&gt;</td><td>Map of field name to value.</td></tr><tr><td class="pn">?headers</td><td class="pt">Map&lt;String, String&gt;</td><td>Optional extra headers.</td></tr><tr><td class="pn">?onSuccess</td><td class="pt">String-&gt;Void</td><td>Optional callback with response text.</td></tr><tr><td class="pn">?onError</td><td class="pt">String-&gt;Void</td><td>Optional callback with error message.</td></tr></table></div><div class="field" id="delete"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">delete</span>(<span class="arg">url</span>:<span class="type">String</span>, <span class='opt'>?</span><span class="arg">headers</span>:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, <span class='opt'>?</span><span class="arg">onSuccess</span>:<span class="type">String</span>-&gt;<span class="type">Void</span>, <span class='opt'>?</span><span class="arg">onError</span>:<span class="type">String</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> delete(url:<span class="type">String</span>, ?headers:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, ?onSuccess:<span class="type">String</span>-&gt;<span class="type">Void</span>, ?onError:<span class="type">String</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span> {
+		<span class="kw">var</span> h = buildRequest(url, headers);
+		h.setHeader(<span class="s">"X-HTTP-Method-Override"</span>, <span class="s">"DELETE"</span>);
+		h.onData = (d:<span class="type">String</span>) -&gt; <span class="kw">if</span> (onSuccess != <span class="kw">null</span>) onSuccess(d);
+		h.onError = (msg:<span class="type">String</span>) -&gt; <span class="kw">if</span> (onError != <span class="kw">null</span>) onError(msg);
+		<span class="kw">try</span> h.request(<span class="kw">false</span>)
+		<span class="kw">catch</span> (e:<span class="type">Dynamic</span>) <span class="kw">if</span> (onError != <span class="kw">null</span>) onError(<span class="type">Std</span>.string(e));
+	}</pre></details><div class="fdoc"><p>Send a DELETE request.</p></div><table class="params"><tr><td class="pn">url</td><td class="pt">String</td><td>Target URL.</td></tr><tr><td class="pn">?headers</td><td class="pt">Map&lt;String, String&gt;</td><td>Optional headers.</td></tr><tr><td class="pn">?onSuccess</td><td class="pt">String-&gt;Void</td><td>Optional callback with response text.</td></tr><tr><td class="pn">?onError</td><td class="pt">String-&gt;Void</td><td>Optional callback with error message.</td></tr></table></div><div class="field" id="putJson"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">putJson</span>(<span class="arg">url</span>:<span class="type">String</span>, <span class="arg">data</span>:<span class="type">Dynamic</span>, <span class='opt'>?</span><span class="arg">headers</span>:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, <span class='opt'>?</span><span class="arg">onSuccess</span>:<span class="type">String</span>-&gt;<span class="type">Void</span>, <span class='opt'>?</span><span class="arg">onError</span>:<span class="type">String</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> putJson(url:<span class="type">String</span>, data:<span class="type">Dynamic</span>, ?headers:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, ?onSuccess:<span class="type">String</span>-&gt;<span class="type">Void</span>, ?onError:<span class="type">String</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span> {
+		<span class="kw">var</span> h = buildRequest(url, headers);
+		h.setHeader(<span class="s">"Content-Type"</span>, <span class="s">"application/json"</span>);
+		h.setHeader(<span class="s">"X-HTTP-Method-Override"</span>, <span class="s">"PUT"</span>);
+		h.setPostData(<span class="type">Json</span>.stringify(data));
+		h.onData = (d:<span class="type">String</span>) -&gt; <span class="kw">if</span> (onSuccess != <span class="kw">null</span>) onSuccess(d);
+		h.onError = (msg:<span class="type">String</span>) -&gt; <span class="kw">if</span> (onError != <span class="kw">null</span>) onError(msg);
+		<span class="kw">try</span> h.request(<span class="kw">true</span>)
+		<span class="kw">catch</span> (e:<span class="type">Dynamic</span>) <span class="kw">if</span> (onError != <span class="kw">null</span>) onError(<span class="type">Std</span>.string(e));
+	}</pre></details><div class="fdoc"><p>Send a PUT request with a JSON body.</p></div><table class="params"><tr><td class="pn">url</td><td class="pt">String</td><td>Target URL.</td></tr><tr><td class="pn">data</td><td class="pt">Dynamic</td><td>Object to serialise as JSON body.</td></tr><tr><td class="pn">?headers</td><td class="pt">Map&lt;String, String&gt;</td><td>Optional extra headers.</td></tr><tr><td class="pn">?onSuccess</td><td class="pt">String-&gt;Void</td><td>Optional callback with response text.</td></tr><tr><td class="pn">?onError</td><td class="pt">String-&gt;Void</td><td>Optional callback with error message.</td></tr></table></div><div class="field" id="patchJson"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">patchJson</span>(<span class="arg">url</span>:<span class="type">String</span>, <span class="arg">data</span>:<span class="type">Dynamic</span>, <span class='opt'>?</span><span class="arg">headers</span>:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, <span class='opt'>?</span><span class="arg">onSuccess</span>:<span class="type">String</span>-&gt;<span class="type">Void</span>, <span class='opt'>?</span><span class="arg">onError</span>:<span class="type">String</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> patchJson(url:<span class="type">String</span>, data:<span class="type">Dynamic</span>, ?headers:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, ?onSuccess:<span class="type">String</span>-&gt;<span class="type">Void</span>, ?onError:<span class="type">String</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span> {
+		<span class="kw">var</span> h = buildRequest(url, headers);
+		h.setHeader(<span class="s">"Content-Type"</span>, <span class="s">"application/json"</span>);
+		h.setHeader(<span class="s">"X-HTTP-Method-Override"</span>, <span class="s">"PATCH"</span>);
+		h.setPostData(<span class="type">Json</span>.stringify(data));
+		h.onData = (d:<span class="type">String</span>) -&gt; <span class="kw">if</span> (onSuccess != <span class="kw">null</span>) onSuccess(d);
+		h.onError = (msg:<span class="type">String</span>) -&gt; <span class="kw">if</span> (onError != <span class="kw">null</span>) onError(msg);
+		<span class="kw">try</span> h.request(<span class="kw">true</span>)
+		<span class="kw">catch</span> (e:<span class="type">Dynamic</span>) <span class="kw">if</span> (onError != <span class="kw">null</span>) onError(<span class="type">Std</span>.string(e));
+	}</pre></details><div class="fdoc"><p>Send a PATCH request with a JSON body.</p></div><table class="params"><tr><td class="pn">url</td><td class="pt">String</td><td>Target URL.</td></tr><tr><td class="pn">data</td><td class="pt">Dynamic</td><td>Object to serialise as JSON body.</td></tr><tr><td class="pn">?headers</td><td class="pt">Map&lt;String, String&gt;</td><td>Optional extra headers.</td></tr><tr><td class="pn">?onSuccess</td><td class="pt">String-&gt;Void</td><td>Optional callback with response text.</td></tr><tr><td class="pn">?onError</td><td class="pt">String-&gt;Void</td><td>Optional callback with error message.</td></tr></table></div><div class="field" id="getJson"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">getJson</span>(<span class="arg">url</span>:<span class="type">String</span>, <span class='opt'>?</span><span class="arg">headers</span>:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, <span class="arg">onSuccess</span>:<span class="type">Dynamic</span>-&gt;<span class="type">Void</span>, <span class='opt'>?</span><span class="arg">onError</span>:<span class="type">String</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> getJson(url:<span class="type">String</span>, ?headers:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, onSuccess:<span class="type">Dynamic</span>-&gt;<span class="type">Void</span>, ?onError:<span class="type">String</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span> {
+		<span class="kw">var</span> h = buildRequest(url, headers);
+		h.setHeader(<span class="s">"Accept"</span>, <span class="s">"application/json"</span>);
+		h.onData = (d:<span class="type">String</span>) -&gt; {
+			<span class="kw">try</span> onSuccess(<span class="type">Json</span>.parse(d))
+			<span class="kw">catch</span> (e:<span class="type">Dynamic</span>) <span class="kw">if</span> (onError != <span class="kw">null</span>) onError(<span class="s">"JSON parse error: "</span> + <span class="type">Std</span>.string(e));
+		};
+		h.onError = (msg:<span class="type">String</span>) -&gt; <span class="kw">if</span> (onError != <span class="kw">null</span>) onError(msg);
+		<span class="kw">try</span> h.request(<span class="kw">false</span>)
+		<span class="kw">catch</span> (e:<span class="type">Dynamic</span>) <span class="kw">if</span> (onError != <span class="kw">null</span>) onError(<span class="type">Std</span>.string(e));
+	}</pre></details><div class="fdoc"><p>Fetch a URL and parse the response as JSON.</p></div><table class="params"><tr><td class="pn">url</td><td class="pt">String</td><td>Target URL.</td></tr><tr><td class="pn">?headers</td><td class="pt">Map&lt;String, String&gt;</td><td>Optional headers.</td></tr><tr><td class="pn">onSuccess</td><td class="pt">Dynamic-&gt;Void</td><td>Callback with parsed JSON.</td></tr><tr><td class="pn">?onError</td><td class="pt">String-&gt;Void</td><td>Optional error callback.</td></tr></table></div><div class="field" id="downloadTo"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">downloadTo</span>(<span class="arg">url</span>:<span class="type">String</span>, <span class="arg">savePath</span>:<span class="type">String</span>, <span class='opt'>?</span><span class="arg">headers</span>:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, <span class='opt'>?</span><span class="arg">onProgress</span>:(<span class="type">Int</span>, <span class="type">Int</span>)-&gt;<span class="type">Void</span>, <span class='opt'>?</span><span class="arg">onDone</span>:<span class="type">Void</span>-&gt;<span class="type">Void</span>, <span class='opt'>?</span><span class="arg">onError</span>:<span class="type">String</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> downloadTo(url:<span class="type">String</span>, savePath:<span class="type">String</span>, ?headers:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;, ?onProgress:(<span class="type">Int</span>, <span class="type">Int</span>)-&gt;<span class="type">Void</span>, ?onDone:<span class="type">Void</span>-&gt;<span class="type">Void</span>, ?onError:<span class="type">String</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span> {
+		<span class="kw">try</span> {
+			<span class="kw">var</span> bytes = requestBytes(url, headers, <span class="num">5</span>, onProgress);
+			sys.io.<span class="type">File</span>.saveBytes(savePath, bytes);
+			<span class="kw">if</span> (onDone != <span class="kw">null</span>) onDone();
+		} <span class="kw">catch</span> (e:<span class="type">Dynamic</span>) {
+			<span class="kw">if</span> (onError != <span class="kw">null</span>) onError(<span class="type">Std</span>.string(e));
+		}
+	}</pre></details><div class="fdoc"><p>Download a URL to a local file path.</p></div><table class="params"><tr><td class="pn">url</td><td class="pt">String</td><td>Remote URL.</td></tr><tr><td class="pn">savePath</td><td class="pt">String</td><td>Local destination path.</td></tr><tr><td class="pn">?headers</td><td class="pt">Map&lt;String, String&gt;</td><td>Optional headers.</td></tr><tr><td class="pn">?onProgress</td><td class="pt">(Int, Int)-&gt;Void</td><td>Optional progress callback (downloaded, total).</td></tr><tr><td class="pn">?onDone</td><td class="pt">Void-&gt;Void</td><td>Optional completion callback.</td></tr><tr><td class="pn">?onError</td><td class="pt">String-&gt;Void</td><td>Optional error callback.</td></tr></table></div><div class="field" id="hasBytes"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">hasBytes</span>(<span class="arg">url</span>:<span class="type">String</span>, <span class='opt'>?</span><span class="arg">headers</span>:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;):<span class="type">Bool</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> hasBytes(url:<span class="type">String</span>, ?headers:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;):<span class="type">Bool</span> {
+		<span class="kw">try</span> <span class="kw">return</span> requestBytes(url, headers) != <span class="kw">null</span>
+		<span class="kw">catch</span> (_) <span class="kw">return</span> <span class="kw">false</span>;
+	}</pre></details><div class="fdoc"><p>Check if a URL returns any bytes without throwing.</p></div><table class="params"><tr><td class="pn">url</td><td class="pt">String</td><td>Target URL.</td></tr><tr><td class="pn">?headers</td><td class="pt">Map&lt;String, String&gt;</td><td>Optional headers.</td></tr></table></div><div class="field" id="getStatusCode"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">getStatusCode</span>(<span class="arg">url</span>:<span class="type">String</span>, <span class='opt'>?</span><span class="arg">headers</span>:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;):<span class="type">Int</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> getStatusCode(url:<span class="type">String</span>, ?headers:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;):<span class="type">Int</span> {
+		<span class="kw">var</span> code = -<span class="num">1</span>;
+		<span class="kw">var</span> h = buildRequest(url, headers);
+		h.onStatus = (c:<span class="type">Int</span>) -&gt; code = c;
+		h.onBytes = (_) -&gt; {};
+		h.onError = (_) -&gt; {};
+		<span class="kw">try</span> h.request(<span class="kw">false</span>) <span class="kw">catch</span> (_) {}
+		<span class="kw">return</span> code;
+	}</pre></details><div class="fdoc"><p>Return the HTTP status code for a URL without downloading the body.</p></div><table class="params"><tr><td class="pn">url</td><td class="pt">String</td><td>Target URL.</td></tr><tr><td class="pn">?headers</td><td class="pt">Map&lt;String, String&gt;</td><td>Optiogeneratenal headers.</td></tr></table></div><div class="field" id="getResponseHeaders"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">getResponseHeaders</span>(<span class="arg">url</span>:<span class="type">String</span>, <span class='opt'>?</span><span class="arg">headers</span>:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;):<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;</summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> getResponseHeaders(url:<span class="type">String</span>, ?headers:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;):<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt; {
+		<span class="kw">var</span> h = buildRequest(url, headers);
+		h.onBytes = (_) -&gt; {};
+		h.onError = (_) -&gt; {};
+		<span class="kw">try</span> h.request(<span class="kw">false</span>) <span class="kw">catch</span> (_) {}
+		<span class="kw">return</span> h.responseHeaders ?? <span class="kw">new</span> <span class="type">Map</span>();
+	}</pre></details><div class="fdoc"><p>Return all response headers for a URL.</p></div><table class="params"><tr><td class="pn">url</td><td class="pt">String</td><td>Target URL.</td></tr><tr><td class="pn">?headers</td><td class="pt">Map&lt;String, String&gt;</td><td>Optional request headers.</td></tr></table></div><div class="field" id="requestWithRetry"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">requestWithRetry</span>(<span class="arg">url</span>:<span class="type">String</span>, <span class="arg">maxAttempts</span>:<span class="type">Int</span><span class="def"> = 3</span>, <span class="arg">delayMs</span>:<span class="type">Int</span><span class="def"> = 500</span>, <span class='opt'>?</span><span class="arg">headers</span>:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;):<span class="type">Bytes</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> requestWithRetry(url:<span class="type">String</span>, maxAttempts:<span class="type">Int</span> = <span class="num">3</span>, delayMs:<span class="type">Int</span> = <span class="num">500</span>, ?headers:<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="type">String</span>&gt;):<span class="type">Bytes</span> {
+		<span class="kw">var</span> lastErr:<span class="type">Dynamic</span> = <span class="kw">null</span>;
+		<span class="kw">for</span> (i <span class="kw">in</span> <span class="num">0...maxAttempts</span>) {
+			<span class="kw">try</span> <span class="kw">return</span> requestBytes(url, headers)
+			<span class="kw">catch</span> (e:<span class="type">Dynamic</span>) {
+				lastErr = e;
+				<span class="kw">if</span> (i &lt; maxAttempts - <span class="num">1</span>) <span class="type">Sys</span>.sleep(delayMs / <span class="num">1000.0</span>);
+			}
+		}
+		<span class="kw">throw</span> lastErr;
+	}</pre></details><div class="fdoc"><p>Retry a request up to maxAttempts times with an optional delay between attempts.</p></div><table class="params"><tr><td class="pn">url</td><td class="pt">String</td><td>Target URL.</td></tr><tr><td class="pn">maxAttempts</td><td class="pt">Int</td><td>Max number of attempts (default 3).</td></tr><tr><td class="pn">delayMs</td><td class="pt">Int</td><td>Milliseconds to wait between attempts (default 500).</td></tr><tr><td class="pn">?headers</td><td class="pt">Map&lt;String, String&gt;</td><td>Optional headers.</td></tr></table></div><div class="field" id="checkInternet"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">checkInternet</span>():<span class="type">Bool</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> checkInternet():<span class="type">Bool</span> {
+		<span class="kw">try</span> {
+			hasInternet = requestText(<span class="s">"https://example.com"</span>) != <span class="kw">null</span>;
+		} <span class="kw">catch</span> (_) {
+			hasInternet = <span class="kw">false</span>;
+		}
+		<span class="kw">return</span> hasInternet;
+	}</pre></details><div class="fdoc"><p>Check internet connectivity by hitting a lightweight URL. Updates hasInternet.</p></div></div><div class="field" id="checkInternetAsync"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">checkInternetAsync</span>(<span class="arg">onResult</span>:<span class="type">Bool</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> checkInternetAsync(onResult:<span class="type">Bool</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span> {
+		<span class="type">Timer</span>.delay(() -&gt; onResult(checkInternet()), <span class="num">0</span>);
+	}</pre></details><div class="fdoc"><p>Check internet connectivity asynchronously via a timer-based approach.</p></div><table class="params"><tr><td class="pn">onResult</td><td class="pt">Bool-&gt;Void</td><td>Callback with true if internet is reachable.</td></tr></table></div>
+<footer>generated by hxdoc // hxdoc made by HeroEyad</footer>
+</main>
+</div>
+<script>
+function fuzzy(q, s) {
+	q = q.toLowerCase(); s = s.toLowerCase();
+	if (!q) return true;
+	var i = 0;
+	for (var j = 0; j < s.length && i < q.length; j++) if (s[j] === q[i]) i++;
+	return i === q.length;
+}
+document.querySelector(".search").addEventListener("input", function () {
+	var q = this.value.trim();
+	document.querySelectorAll("nav > ul > li, nav ul:not(.mem) > li").forEach(function (li) {
+		if (li.parentElement.classList.contains("mem")) return;
+		var cls = li.getAttribute("data-name") || "";
+		var classHit = fuzzy(q, cls);
+		var memberHit = false;
+		li.querySelectorAll(".mem > li").forEach(function (mli) {
+			var hit = q !== "" && fuzzy(q, mli.getAttribute("data-name") || "");
+			mli.classList.toggle("mhit", hit);
+			if (hit) memberHit = true;
+		});
+		li.classList.toggle("hidden", !(classHit || memberHit) && q !== "");
+		li.classList.toggle("expanded", memberHit && q !== "");
+	});
+});
+</script>
+</body>
+</html>

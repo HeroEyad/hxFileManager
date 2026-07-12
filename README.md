@@ -18,18 +18,18 @@
 
 ## Features
 
-- **Async thread pool** — `init()` starts N worker threads; all `*Async` methods run off the main thread and return results via callbacks.
-- **Full file I/O** — read, write, append, prepend, truncate, safe atomic write, raw bytes, Base64, and line-by-line helpers.
-- **JSON** — read, write (with pretty-print), and patch-in-place with a transform function.
-- **Folder operations** — create, copy, move, delete, recursive listing, subdirectory listing, file count, and empty-folder cleanup.
-- **Search** — find files by name pattern, extension, or content substring.
-- **File watching** — poll-based `watchFile` / `watchFolder` with configurable intervals and cancellation.
-- **Hashing & comparison** — async MD5, SHA-256, and byte-for-byte file comparison.
-- **Batch operations** — read, write, copy, move, and delete multiple paths in a single async call.
-- **HTTP** — `HttpManager` provides GET, POST, PUT, PATCH, DELETE, JSON helpers, redirect following, retry logic, progress callbacks, and internet detection.
-- **Platform utilities** — `getAppDataPath`, `getPlatformName`, `requestAdmin`, `generateUniqueFileNameAsync`, temp file/folder creation.
-- **Metadata** — size, last-modified date, extension, filename, and parent directory helpers.
-- **Backwards compatible** — deprecated sync shims kept under `@:deprecated @:noCompletion` for smooth migration.
+- **Async thread pool**: `init()` starts N worker threads; all `*Async` methods run off the main thread and return results via callbacks.
+- **Full file I/O**: read, write, append, prepend, truncate, safe atomic write, raw bytes, Base64, and line-by-line helpers.
+- **JSON**: read, write (with pretty-print), and patch-in-place with a transform function.
+- **Folder operations**: create, copy, move, delete, recursive listing, subdirectory listing, file count, and empty-folder cleanup.
+- **Search**: find files by name pattern, extension, or content substring.
+- **File watching**: poll-based `watchFile` / `watchFolder` with configurable intervals and cancellation.
+- **Hashing & comparison**: async MD5, SHA-256, and byte-for-byte file comparison.
+- **Batch operations**: read, write, copy, move, and delete multiple paths in a single async call.
+- **HTTP**: `HttpManager` provides GET, POST, PUT, PATCH, DELETE, JSON helpers, redirect following, retry logic, progress callbacks, and internet detection.
+- **Platform utilities**: `getAppDataPath`, `getPlatformName`, `requestAdmin`, `generateUniqueFileNameAsync`, temp file/folder creation.
+- **Metadata**: size, last-modified date, extension, filename, and parent directory helpers.
+- **Backwards compatible**: deprecated sync shims kept under `@:deprecated @:noCompletion` for smooth migration.
 
 ---
 
@@ -105,7 +105,7 @@ class Main {
 
 ## HttpManager
 
-`HttpManager` is a standalone HTTP client. All methods are synchronous — wrap them in `FileManager.enqueueAsync` for non-blocking use.
+`HttpManager` is a standalone HTTP client. All methods are synchronous: wrap them in `FileManager.enqueueAsync` for non-blocking use.
 
 ```haxe
 import hxFileManager.HttpManager;
@@ -177,7 +177,7 @@ Sync methods from earlier versions (`createFile`, `readFile`, `copyFile`, etc.) 
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT: see [LICENSE](LICENSE) for details.
 
 ---
 

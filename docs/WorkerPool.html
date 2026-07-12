@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WorkerPool - HxFileManager API Documentation</title>
+<style>
+:root {
+	--bg: #16181d; --fg: #d4d7dd; --muted: #8b93a1;
+	--header: #0d0f12; --header2: #151a22; --accent: #4fa3ff;
+	--sidebar: #1b1e24; --border: #2a2e37;
+	--sig-bg: #1e222a; --kw: #ff7b72; --type: #d2a8ff; --fname: #79c0ff;
+	--dep-bg: #2b2413; --dep-border: #6b5518;
+	font-size: 15px;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; color: var(--fg); background: var(--bg); }
+code, .sig, .search { font-family: "JetBrains Mono", Consolas, Menlo, monospace; }
+::selection { background: #2b4a75; }
+
+header {
+	background: linear-gradient(180deg, var(--header) 0%, var(--header2) 100%);
+	color: #fff;
+	padding: 14px 24px;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	border-bottom: 1px solid var(--border);
+}
+
+header .logo {
+	width: 48px;
+	height: auto;
+	flex-shrink: 0;
+	image-rendering: auto;
+}
+
+header h1 {
+	font-size: 18px;
+	margin: 0;
+	font-weight: 600;
+	letter-spacing: .3px;
+}
+
+header h1 a {
+	color: #fff;
+	text-decoration: none;
+}
+
+header .sub {
+	display: block;
+	color: #6d7686;
+	font-size: 13px;
+	margin-top: 2px;
+}
+
+.layout { display: flex; min-height: calc(100vh - 50px); }
+
+nav {
+	width: 270px; flex-shrink: 0; background: var(--sidebar);
+	border-right: 1px solid var(--border); padding: 16px 0;
+	position: sticky; top: 50px; height: calc(100vh - 50px); overflow-y: auto;
+}
+nav .search {
+	display: block; width: calc(100% - 32px); margin: 0 16px 14px;
+	padding: 7px 10px; border: 1px solid var(--border); border-radius: 5px;
+	font-size: 13px; outline: none; background: #14161b; color: var(--fg);
+}
+nav .search::placeholder { color: #5b6272; }
+nav .search:focus { border-color: var(--accent); }
+nav .pkg { padding: 4px 16px; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .6px; }
+nav ul { list-style: none; margin: 0 0 12px; padding: 0; }
+nav li a {
+	display: block; padding: 5px 16px 5px 28px; color: var(--fg);
+	text-decoration: none; font-size: 14px; border-left: 3px solid transparent;
+}
+nav li a:hover { background: #23272f; }
+nav li a.active { border-left-color: var(--accent); background: #23272f; font-weight: 600; }
+nav li .k { color: var(--muted); font-size: 11px; margin-right: 6px; }
+nav .mem { display: none; margin: 0; }
+nav li.expanded > .mem { display: block; }
+nav .mem > li { display: none; }
+nav .mem > li.mhit { display: block; }
+nav .mem > li > a {
+	padding: 3px 16px 3px 44px; font-size: 12.5px; color: var(--muted);
+	font-family: Consolas, Menlo, monospace;
+}
+nav .mem > li > a:hover { color: var(--fg); }
+
+main { flex: 1; padding: 28px 40px 80px; max-width: 1000px; }
+main h1.classname { font-size: 26px; margin: 0 0 2px; font-weight: 600; color: #fff; }
+main .pkgline { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+main .pkgline code { color: #a5b4c8; }
+main .classdoc { margin-bottom: 26px; line-height: 1.6; }
+main h2.section {
+	font-size: 13px; text-transform: uppercase; letter-spacing: .8px;
+	color: var(--muted); border-bottom: 1px solid var(--border);
+	padding-bottom: 6px; margin: 34px 0 6px;
+}
+
+.field { padding: 16px 0 18px; border-bottom: 1px solid var(--border); }
+.field:target { background: #22262e; margin: 0 -14px; padding-left: 14px; padding-right: 14px; border-radius: 6px; }
+.sig {
+	background: var(--sig-bg); border: 1px solid var(--border); border-radius: 6px;
+	padding: 10px 14px; font-size: 13.5px; overflow-x: auto; white-space: pre-wrap; word-break: break-word;
+}
+.fold { margin: 0; }
+summary.sig { list-style: none; cursor: pointer; position: relative; padding-left: 30px; }
+summary.sig::-webkit-details-marker { display: none; }
+summary.sig::before {
+	content: ""; position: absolute; left: 13px; top: 16px;
+	width: 0; height: 0;
+	border-left: 6px solid var(--muted); border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+	transition: transform .12s ease;
+}
+.fold[open] summary.sig::before { transform: rotate(90deg); border-left-color: var(--accent); }
+summary.sig:hover { border-color: #3a4150; }
+summary.sig:hover::before { border-left-color: var(--fg); }
+.fold[open] summary.sig { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom-color: transparent; }
+.fold .srccode { border-top-left-radius: 0; border-top-right-radius: 0; margin-top: 0; }
+.kw { color: var(--kw); } .type { color: var(--type); text-decoration: none; }
+a.type:hover { text-decoration: underline; }
+.fname { color: var(--fname); font-weight: 600; } .arg { color: #e6edf3; }
+.opt, .def { color: var(--muted); }
+
+.fdoc { margin: 10px 2px 0; line-height: 1.55; }
+.fdoc p { margin: 0 0 8px; }
+table.params { border-collapse: collapse; margin: 10px 0 0; font-size: 13.5px; width: 100%; }
+table.params td { border: 1px solid var(--border); padding: 6px 10px; vertical-align: top; }
+table.params td.pn { font-family: Consolas, Menlo, monospace; color: var(--fname); white-space: nowrap; width: 1%; }
+table.params td.pt { font-family: Consolas, Menlo, monospace; color: var(--type); white-space: nowrap; width: 1%; }
+.returns { margin-top: 8px; font-size: 13.5px; }
+.returns b { color: var(--muted); font-weight: 600; }
+
+.srccode {
+	margin: 0; background: #14171c; border: 1px solid var(--border); border-radius: 6px;
+	padding: 12px 14px; font-size: 12.5px; line-height: 1.5; overflow-x: auto;
+	tab-size: 4; color: #cdd3dc;
+	font-family: "JetBrains Mono", Consolas, Menlo, monospace;
+}
+.srccode .c { color: #6d7686; font-style: italic; }
+.srccode .s { color: #a5d6a7; }
+.srccode .num { color: #f0b26b; }
+.srccode .kw { color: var(--kw); }
+.srccode .type { color: var(--type); }
+
+.badge {
+	display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px;
+	vertical-align: middle; margin-left: 8px; font-weight: 600;
+}
+.badge.dep { background: var(--dep-bg); border: 1px solid var(--dep-border); color: #d9b44a; }
+.depnote {
+	background: var(--dep-bg); border: 1px solid var(--dep-border);
+	border-radius: 6px; padding: 8px 12px; margin: 8px 0 0; font-size: 13.5px; color: #d9c17a;
+}
+
+.toc { columns: 2; column-gap: 40px; margin: 8px 0 0; padding: 0; list-style: none; font-size: 13.5px; }
+.toc li { margin: 3px 0; break-inside: avoid; }
+.toc a { color: var(--fname); text-decoration: none; font-family: Consolas, Menlo, monospace; }
+.toc a:hover { text-decoration: underline; }
+.toc .dep-toc { opacity: .55; }
+
+.index-list { list-style: none; padding: 0; }
+.index-list li { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.index-list a { font-size: 17px; color: var(--fname); text-decoration: none; font-weight: 600; }
+.index-list a:hover { text-decoration: underline; }
+.index-list .d { color: var(--muted); font-size: 13.5px; margin-top: 3px; line-height: 1.5; }
+.hidden { display: none; }
+footer { color: var(--muted); font-size: 12px; margin-top: 60px; }
+
+nav::-webkit-scrollbar, body::-webkit-scrollbar { width: 10px; }
+nav::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb { background: #2e333d; border-radius: 5px; }
+nav::-webkit-scrollbar-track, body::-webkit-scrollbar-track { background: transparent; }
+
+@media (max-width: 760px) {
+	.layout { flex-direction: column; }
+	nav { width: 100%; height: auto; position: static; }
+	main { padding: 20px 18px 60px; }
+	.toc { columns: 1; }
+}
+</style>
+</head>
+<body>
+<header>
+	<img class="logo" src="hxfilemanagerlogo.png" alt="HxFileManager Logo">
+	<div>
+		<h1><a href="index.html">HxFileManager API Documentation</a></h1>
+		<span class="sub">API documentation</span>
+	</div>
+</header>
+<div class="layout">
+<nav>
+<input class="search" type="text" placeholder="Filter classes...">
+<div class="pkg">hxFileManager</div><ul><li data-name="FileManager"><a href="FileManager.html"><span class="k">C</span>FileManager</a><ul class="mem"><li data-name="rootDir"><a href="FileManager.html#rootDir">rootDir</a></li><li data-name="isAdmin"><a href="FileManager.html#isAdmin">isAdmin</a></li><li data-name="init"><a href="FileManager.html#init">init</a></li><li data-name="dispose"><a href="FileManager.html#dispose">dispose</a></li><li data-name="enqueueAsync"><a href="FileManager.html#enqueueAsync">enqueueAsync</a></li><li data-name="fileExists"><a href="FileManager.html#fileExists">fileExists</a></li><li data-name="folderExists"><a href="FileManager.html#folderExists">folderExists</a></li><li data-name="fileExistsAsync"><a href="FileManager.html#fileExistsAsync">fileExistsAsync</a></li><li data-name="folderExistsAsync"><a href="FileManager.html#folderExistsAsync">folderExistsAsync</a></li><li data-name="readFileAsync"><a href="FileManager.html#readFileAsync">readFileAsync</a></li><li data-name="readFileBytesAsync"><a href="FileManager.html#readFileBytesAsync">readFileBytesAsync</a></li><li data-name="writeFileAsync"><a href="FileManager.html#writeFileAsync">writeFileAsync</a></li><li data-name="writeBytesAsync"><a href="FileManager.html#writeBytesAsync">writeBytesAsync</a></li><li data-name="createFileAsync"><a href="FileManager.html#createFileAsync">createFileAsync</a></li><li data-name="appendFileAsync"><a href="FileManager.html#appendFileAsync">appendFileAsync</a></li><li data-name="prependFileAsync"><a href="FileManager.html#prependFileAsync">prependFileAsync</a></li><li data-name="safeWriteAsync"><a href="FileManager.html#safeWriteAsync">safeWriteAsync</a></li><li data-name="readLinesAsync"><a href="FileManager.html#readLinesAsync">readLinesAsync</a></li><li data-name="writeLinesAsync"><a href="FileManager.html#writeLinesAsync">writeLinesAsync</a></li><li data-name="truncateFileAsync"><a href="FileManager.html#truncateFileAsync">truncateFileAsync</a></li><li data-name="readJsonAsync"><a href="FileManager.html#readJsonAsync">readJsonAsync</a></li><li data-name="writeJsonAsync"><a href="FileManager.html#writeJsonAsync">writeJsonAsync</a></li><li data-name="patchJsonAsync"><a href="FileManager.html#patchJsonAsync">patchJsonAsync</a></li><li data-name="getFileMetadataAsync"><a href="FileManager.html#getFileMetadataAsync">getFileMetadataAsync</a></li><li data-name="getFileSizeAsync"><a href="FileManager.html#getFileSizeAsync">getFileSizeAsync</a></li><li data-name="getFolderSizeAsync"><a href="FileManager.html#getFolderSizeAsync">getFolderSizeAsync</a></li><li data-name="getLastModifiedAsync"><a href="FileManager.html#getLastModifiedAsync">getLastModifiedAsync</a></li><li data-name="getFileExtension"><a href="FileManager.html#getFileExtension">getFileExtension</a></li><li data-name="getFileName"><a href="FileManager.html#getFileName">getFileName</a></li><li data-name="getFileNameWithoutExt"><a href="FileManager.html#getFileNameWithoutExt">getFileNameWithoutExt</a></li><li data-name="getParentDir"><a href="FileManager.html#getParentDir">getParentDir</a></li><li data-name="copyFileAsync"><a href="FileManager.html#copyFileAsync">copyFileAsync</a></li><li data-name="copyFolderAsync"><a href="FileManager.html#copyFolderAsync">copyFolderAsync</a></li><li data-name="moveFileAsync"><a href="FileManager.html#moveFileAsync">moveFileAsync</a></li><li data-name="moveFolderAsync"><a href="FileManager.html#moveFolderAsync">moveFolderAsync</a></li><li data-name="deletePathAsync"><a href="FileManager.html#deletePathAsync">deletePathAsync</a></li><li data-name="duplicateFileAsync"><a href="FileManager.html#duplicateFileAsync">duplicateFileAsync</a></li><li data-name="createFolderAsync"><a href="FileManager.html#createFolderAsync">createFolderAsync</a></li><li data-name="listFilesAsync"><a href="FileManager.html#listFilesAsync">listFilesAsync</a></li><li data-name="listFilesDeepAsync"><a href="FileManager.html#listFilesDeepAsync">listFilesDeepAsync</a></li><li data-name="listFoldersAsync"><a href="FileManager.html#listFoldersAsync">listFoldersAsync</a></li><li data-name="countFilesAsync"><a href="FileManager.html#countFilesAsync">countFilesAsync</a></li><li data-name="searchFilesAsync"><a href="FileManager.html#searchFilesAsync">searchFilesAsync</a></li><li data-name="searchByExtensionAsync"><a href="FileManager.html#searchByExtensionAsync">searchByExtensionAsync</a></li><li data-name="searchByContentAsync"><a href="FileManager.html#searchByContentAsync">searchByContentAsync</a></li><li data-name="cleanEmptyFoldersAsync"><a href="FileManager.html#cleanEmptyFoldersAsync">cleanEmptyFoldersAsync</a></li><li data-name="watchFolder"><a href="FileManager.html#watchFolder">watchFolder</a></li><li data-name="watchFile"><a href="FileManager.html#watchFile">watchFile</a></li><li data-name="stopWatcher"><a href="FileManager.html#stopWatcher">stopWatcher</a></li><li data-name="stopWatchingFolder"><a href="FileManager.html#stopWatchingFolder">stopWatchingFolder</a></li><li data-name="generateUniqueFileNameAsync"><a href="FileManager.html#generateUniqueFileNameAsync">generateUniqueFileNameAsync</a></li><li data-name="createTempFileAsync"><a href="FileManager.html#createTempFileAsync">createTempFileAsync</a></li><li data-name="createTempFolderAsync"><a href="FileManager.html#createTempFolderAsync">createTempFolderAsync</a></li><li data-name="downloadFileAsync"><a href="FileManager.html#downloadFileAsync">downloadFileAsync</a></li><li data-name="hashFileMd5Async"><a href="FileManager.html#hashFileMd5Async">hashFileMd5Async</a></li><li data-name="hashFileSha256Async"><a href="FileManager.html#hashFileSha256Async">hashFileSha256Async</a></li><li data-name="compareFilesAsync"><a href="FileManager.html#compareFilesAsync">compareFilesAsync</a></li><li data-name="readFileBase64Async"><a href="FileManager.html#readFileBase64Async">readFileBase64Async</a></li><li data-name="writeFileBase64Async"><a href="FileManager.html#writeFileBase64Async">writeFileBase64Async</a></li><li data-name="batchDeleteAsync"><a href="FileManager.html#batchDeleteAsync">batchDeleteAsync</a></li><li data-name="batchCopyAsync"><a href="FileManager.html#batchCopyAsync">batchCopyAsync</a></li><li data-name="batchMoveAsync"><a href="FileManager.html#batchMoveAsync">batchMoveAsync</a></li><li data-name="batchReadAsync"><a href="FileManager.html#batchReadAsync">batchReadAsync</a></li><li data-name="batchWriteAsync"><a href="FileManager.html#batchWriteAsync">batchWriteAsync</a></li><li data-name="requestAdmin"><a href="FileManager.html#requestAdmin">requestAdmin</a></li><li data-name="getPlatformName"><a href="FileManager.html#getPlatformName">getPlatformName</a></li><li data-name="getAppDataPath"><a href="FileManager.html#getAppDataPath">getAppDataPath</a></li><li data-name="logOperation"><a href="FileManager.html#logOperation">logOperation</a></li><li data-name="createFile"><a href="FileManager.html#createFile">createFile</a></li><li data-name="readFile"><a href="FileManager.html#readFile">readFile</a></li><li data-name="readJson"><a href="FileManager.html#readJson">readJson</a></li><li data-name="writeJson"><a href="FileManager.html#writeJson">writeJson</a></li><li data-name="deletePath"><a href="FileManager.html#deletePath">deletePath</a></li><li data-name="safeWrite"><a href="FileManager.html#safeWrite">safeWrite</a></li><li data-name="copyFolderRecursive"><a href="FileManager.html#copyFolderRecursive">copyFolderRecursive</a></li><li data-name="getFileSize"><a href="FileManager.html#getFileSize">getFileSize</a></li><li data-name="getFolderSize"><a href="FileManager.html#getFolderSize">getFolderSize</a></li><li data-name="listFiles"><a href="FileManager.html#listFiles">listFiles</a></li><li data-name="copyFile"><a href="FileManager.html#copyFile">copyFile</a></li><li data-name="moveFolder"><a href="FileManager.html#moveFolder">moveFolder</a></li><li data-name="renameFile"><a href="FileManager.html#renameFile">renameFile</a></li><li data-name="renameFolder"><a href="FileManager.html#renameFolder">renameFolder</a></li><li data-name="deleteFile"><a href="FileManager.html#deleteFile">deleteFile</a></li><li data-name="deleteFolder"><a href="FileManager.html#deleteFolder">deleteFolder</a></li><li data-name="createFolder"><a href="FileManager.html#createFolder">createFolder</a></li><li data-name="generateUniqueFileName"><a href="FileManager.html#generateUniqueFileName">generateUniqueFileName</a></li><li data-name="getFileMetadata"><a href="FileManager.html#getFileMetadata">getFileMetadata</a></li></ul></li><li data-name="FileWatcher"><a href="FileWatcher.html"><span class="k">C</span>FileWatcher</a><ul class="mem"><li data-name="folder"><a href="FileWatcher.html#folder">folder</a></li><li data-name="file"><a href="FileWatcher.html#file">file</a></li><li data-name="stop"><a href="FileWatcher.html#stop">stop</a></li></ul></li><li data-name="HttpError"><a href="HttpError.html"><span class="k">C</span>HttpError</a><ul class="mem"><li data-name="url"><a href="HttpError.html#url">url</a></li><li data-name="status"><a href="HttpError.html#status">status</a></li><li data-name="redirected"><a href="HttpError.html#redirected">redirected</a></li><li data-name="new"><a href="HttpError.html#new">new</a></li><li data-name="toString"><a href="HttpError.html#toString">toString</a></li></ul></li><li data-name="HttpManager"><a href="HttpManager.html"><span class="k">C</span>HttpManager</a><ul class="mem"><li data-name="hasInternet"><a href="HttpManager.html#hasInternet">hasInternet</a></li><li data-name="defaultUserAgent"><a href="HttpManager.html#defaultUserAgent">defaultUserAgent</a></li><li data-name="defaultTimeout"><a href="HttpManager.html#defaultTimeout">defaultTimeout</a></li><li data-name="requestText"><a href="HttpManager.html#requestText">requestText</a></li><li data-name="requestBytes"><a href="HttpManager.html#requestBytes">requestBytes</a></li><li data-name="postJson"><a href="HttpManager.html#postJson">postJson</a></li><li data-name="postForm"><a href="HttpManager.html#postForm">postForm</a></li><li data-name="delete"><a href="HttpManager.html#delete">delete</a></li><li data-name="putJson"><a href="HttpManager.html#putJson">putJson</a></li><li data-name="patchJson"><a href="HttpManager.html#patchJson">patchJson</a></li><li data-name="getJson"><a href="HttpManager.html#getJson">getJson</a></li><li data-name="downloadTo"><a href="HttpManager.html#downloadTo">downloadTo</a></li><li data-name="hasBytes"><a href="HttpManager.html#hasBytes">hasBytes</a></li><li data-name="getStatusCode"><a href="HttpManager.html#getStatusCode">getStatusCode</a></li><li data-name="getResponseHeaders"><a href="HttpManager.html#getResponseHeaders">getResponseHeaders</a></li><li data-name="requestWithRetry"><a href="HttpManager.html#requestWithRetry">requestWithRetry</a></li><li data-name="checkInternet"><a href="HttpManager.html#checkInternet">checkInternet</a></li><li data-name="checkInternetAsync"><a href="HttpManager.html#checkInternetAsync">checkInternetAsync</a></li></ul></li><li data-name="Platform"><a href="Platform.html"><span class="k">C</span>Platform</a><ul class="mem"><li data-name="rootDir"><a href="Platform.html#rootDir">rootDir</a></li><li data-name="rootDir"><a href="Platform.html#rootDir">rootDir</a></li><li data-name="exePath"><a href="Platform.html#exePath">exePath</a></li><li data-name="isAdmin"><a href="Platform.html#isAdmin">isAdmin</a></li><li data-name="requestAdmin"><a href="Platform.html#requestAdmin">requestAdmin</a></li><li data-name="getPlatformName"><a href="Platform.html#getPlatformName">getPlatformName</a></li><li data-name="getAppDataPath"><a href="Platform.html#getAppDataPath">getAppDataPath</a></li></ul></li><li data-name="WorkerPool"><a href="WorkerPool.html" class="active"><span class="k">C</span>WorkerPool</a><ul class="mem"><li data-name="running"><a href="WorkerPool.html#running">running</a></li><li data-name="init"><a href="WorkerPool.html#init">init</a></li><li data-name="dispose"><a href="WorkerPool.html#dispose">dispose</a></li><li data-name="enqueue"><a href="WorkerPool.html#enqueue">enqueue</a></li><li data-name="mainThread"><a href="WorkerPool.html#mainThread">mainThread</a></li></ul></li></ul><div class="pkg">hxFileManager.utils</div><ul><li data-name="FileUtils"><a href="FileUtils.html"><span class="k">C</span>FileUtils</a><ul class="mem"><li data-name="isUserAdmin"><a href="FileUtils.html#isUserAdmin">isUserAdmin</a></li><li data-name="requestAdmin"><a href="FileUtils.html#requestAdmin">requestAdmin</a></li></ul></li></ul>
+</nav>
+<main>
+<h1 class="classname">WorkerPool</h1><div class="pkgline">class - package <code>hxFileManager</code></div><div class="classdoc"><p>Shared worker-thread pool used by FileManager, FileWatcher and anything else<br>that wants to run blocking work off the main thread.</p></div><h2 class="section">Members</h2><ul class="toc"><li><a href="#running">running</a></li><li><a href="#init">init</a></li><li><a href="#dispose">dispose</a></li><li><a href="#enqueue">enqueue</a></li><li><a href="#mainThread">mainThread</a></li></ul><h2 class="section">Variables</h2><div class="field" id="running"><div class="sig"><span class="kw">static</span> <span class="kw">var</span> <span class="fname">running</span>(default, null):<span class="type">Bool</span></div></div><h2 class="section">Functions</h2><div class="field" id="init"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">init</span>(<span class="arg">numThreads</span>:<span class="type">Int</span><span class="def"> = 4</span>):<span class="type">Void</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> init(numThreads:<span class="type">Int</span> = <span class="num">4</span>):<span class="type">Void</span> {
+		<span class="kw">if</span> (running) <span class="kw">return</span>;
+		running = <span class="kw">true</span>;
+		<span class="kw">for</span> (_ <span class="kw">in</span> <span class="num">0...numThreads</span>) workers.push(<span class="type">Thread</span>.create(workerLoop));
+	}</pre></details><div class="fdoc"><p>Initialise the pool. Must be called before any async method. Safe to call multiple times.</p></div><table class="params"><tr><td class="pn">numThreads</td><td class="pt">Int</td><td>Number of worker threads (default 4).</td></tr></table></div><div class="field" id="dispose"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">function</span> <span class="fname">dispose</span>():<span class="type">Void</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">function</span> dispose():<span class="type">Void</span> {
+		<span class="kw">if</span> (!running) <span class="kw">return</span>;
+		running = <span class="kw">false</span>;
+		<span class="kw">for</span> (_ <span class="kw">in</span> workers) queue.add(<span class="kw">new</span> <span class="type">Task</span>(() -&gt; {}));
+		workers = [];
+	}</pre></details><div class="fdoc"><p>Drain the queue and stop all worker threads.</p></div></div><div class="field" id="enqueue"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">inline</span> <span class="kw">function</span> <span class="fname">enqueue</span>(<span class="arg">fn</span>:<span class="type">Void</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">inline</span> <span class="kw">function</span> enqueue(fn:<span class="type">Void</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span> {
+		#<span class="kw">if</span> debug
+		<span class="kw">if</span> (!running) <span class="kw">throw</span> <span class="s">"WorkerPool not initialised — call WorkerPool.init() (or FileManager.init()) first"</span>;
+		#end
+		queue.add(<span class="kw">new</span> <span class="type">Task</span>(fn));
+	}</pre></details><div class="fdoc"><p>Enqueue arbitrary work onto the pool.</p></div><table class="params"><tr><td class="pn">fn</td><td class="pt">Void-&gt;Void</td><td>Function to execute on a worker thread.</td></tr></table></div><div class="field" id="mainThread"><details class="fold"><summary class="sig has-src"><span class="kw">static</span> <span class="kw">inline</span> <span class="kw">function</span> <span class="fname">mainThread</span>(<span class="arg">fn</span>:<span class="type">Void</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span></summary><pre class="srccode"><span class="kw">public</span> <span class="kw">static</span> <span class="kw">inline</span> <span class="kw">function</span> mainThread(fn:<span class="type">Void</span>-&gt;<span class="type">Void</span>):<span class="type">Void</span>
+		<span class="type">Timer</span>.delay(fn, <span class="num">0</span>);</pre></details><div class="fdoc"><p>Schedule a function to run on the main thread's event loop.</p></div><table class="params"><tr><td class="pn">fn</td><td class="pt">Void-&gt;Void</td><td>Function to run.</td></tr></table></div>
+<footer>generated by hxdoc // hxdoc made by HeroEyad</footer>
+</main>
+</div>
+<script>
+function fuzzy(q, s) {
+	q = q.toLowerCase(); s = s.toLowerCase();
+	if (!q) return true;
+	var i = 0;
+	for (var j = 0; j < s.length && i < q.length; j++) if (s[j] === q[i]) i++;
+	return i === q.length;
+}
+document.querySelector(".search").addEventListener("input", function () {
+	var q = this.value.trim();
+	document.querySelectorAll("nav > ul > li, nav ul:not(.mem) > li").forEach(function (li) {
+		if (li.parentElement.classList.contains("mem")) return;
+		var cls = li.getAttribute("data-name") || "";
+		var classHit = fuzzy(q, cls);
+		var memberHit = false;
+		li.querySelectorAll(".mem > li").forEach(function (mli) {
+			var hit = q !== "" && fuzzy(q, mli.getAttribute("data-name") || "");
+			mli.classList.toggle("mhit", hit);
+			if (hit) memberHit = true;
+		});
+		li.classList.toggle("hidden", !(classHit || memberHit) && q !== "");
+		li.classList.toggle("expanded", memberHit && q !== "");
+	});
+});
+</script>
+</body>
+</html>

@@ -17,8 +17,8 @@
         "mac"
     ],
     "description": "hxFileManager is a cross-platform file management library for Haxe with a clean async API backed by a native thread pool. Covers file read/write/append/prepend/truncate, safe atomic writes, raw bytes and Base64 I/O, JSON read/write/patch, folder create/copy/move/delete, recursive listing and deep search (by name, extension, or content), empty-folder cleanup, file and folder watchers, file metadata (size, mtime, MD5, SHA-256), file comparison, unique name generation, temp file/folder creation, batch operations (read, write, copy, move, delete), and HTTP downloads with retry and progress. HttpManager adds GET/POST/PUT/PATCH/DELETE, JSON requests, redirect following, status codes, response headers, internet detection, and retry logic.",
-    "version": "1.4.0",
-    "releasenote": "Thread pool rework: init() is now explicit (call FileManager.init() before any async operation). Added prependFileAsync, truncateFileAsync, patchJsonAsync, writeLinesAsync, readLinesAsync, writeFileBase64Async, readFileBase64Async, hashFileMd5Async, hashFileSha256Async, compareFilesAsync, duplicateFileAsync, listFilesDeepAsync, listFoldersAsync, countFilesAsync, searchFilesAsync, searchByExtensionAsync, searchByContentAsync, cleanEmptyFoldersAsync, generateUniqueFileNameAsync, createTempFileAsync, createTempFolderAsync, batchReadAsync, batchWriteAsync, batchCopyAsync, batchMoveAsync, batchDeleteAsync, watchFile, stopWatcher. HttpManager gains putJson, patchJson, delete, getResponseHeaders, hasBytes, requestWithRetry, checkInternetAsync, and redirect following on all request methods.",
+    "version": "1.5.0",
+    "releasenote": "Library Overhaul + API Documentation.",
     "contributors": [
         "HeroEyad"
     ],

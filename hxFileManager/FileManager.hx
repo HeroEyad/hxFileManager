@@ -6,85 +6,49 @@ import sys.FileSystem;
 import sys.io.File;
 import haxe.ds.StringMap;
 import haxe.Json;
-import haxe.Timer;
-import sys.thread.Thread;
-import sys.thread.Mutex;
-import sys.thread.Deque;
 import hxFileManager.HttpManager;
-import hxFileManager.utils.*;
+import hxFileManager.WorkerPool;
+import hxFileManager.FileWatcher;
+import hxFileManager.Platform;
 
 using StringTools;
 
-private class Task {
-	public final fn:Void->Void;
-	public function new(fn:Void->Void) this.fn = fn;
-	public inline function run():Void fn();
-}
-
-enum Result<T> {
-	Ok(value:T);
-	Err(reason:String);
-}
-
+/**
+ * Async filesystem operations running on the shared WorkerPool.
+ * Infrastructure lives elsewhere: WorkerPool (threading), FileWatcher (watching), Platform (env/elevation).
+ * The old static API is preserved via delegating wrappers.
+ */
 class FileManager {
 
-	#if (windows || mac || linux)
-	public static final rootDir:String = Path.directory(Sys.programPath());
-	#else
-	public static final rootDir:String = "";
-	#end
+	// kept as forwards so existing code compiles unchanged
+	public static var rootDir(get, never):String;
+	static inline function get_rootDir():String return Platform.rootDir;
 
-	public static var isAdmin(default, null):Bool =
-		#if windows   FileUtils.isUserAdmin()
-		#elseif (linux || mac) Sys.command("id", ["-u"]) == 0
-		#else false #end;
-
-	static final exePath:String = Sys.programPath();
-	static final queue:Deque<Task> = new Deque();
-	static var workers:Array<Thread> = [];
-	static var running:Bool = false;
+	public static var isAdmin(get, never):Bool;
+	static inline function get_isAdmin():Bool return Platform.isAdmin;
 
 	/**
-	 * Initialise the worker-thread pool. Must be called before any async method. Safe to call multiple times.
+	 * Initialise the shared worker pool. Must be called before any async method. Safe to call multiple times.
 	 * @param numThreads Number of worker threads (default 4).
 	 */
-	public static function init(numThreads:Int = 4):Void {
-		if (running) return;
-		running = true;
-		for (_ in 0...numThreads) workers.push(Thread.create(workerLoop));
-	}
+	public static inline function init(numThreads:Int = 4):Void
+		WorkerPool.init(numThreads);
 
 	/**
 	 * Drain the queue and stop all worker threads.
 	 */
-	public static function dispose():Void {
-		if (!running) return;
-		running = false;
-		for (_ in workers) queue.add(new Task(() -> {}));
-		workers = [];
-	}
-
-	static function workerLoop():Void {
-		while (running) {
-			var task = queue.pop(true);
-			if (task == null || !running) break;
-			try task.run() catch (e) trace("FileManager worker error: " + e);
-		}
-	}
+	public static inline function dispose():Void
+		WorkerPool.dispose();
 
 	/**
 	 * Enqueue arbitrary work onto the shared thread pool.
 	 * @param fn Function to execute on a worker thread.
 	 */
-	public static inline function enqueueAsync(fn:Void->Void):Void {
-		#if debug
-		if (!running) throw "FileManager not initialised — call FileManager.init() first";
-		#end
-		queue.add(new Task(fn));
-	}
+	public static inline function enqueueAsync(fn:Void->Void):Void
+		WorkerPool.enqueue(fn);
 
 	static inline function mainThread(fn:Void->Void):Void
-		Timer.delay(fn, 0);
+		WorkerPool.mainThread(fn);
 
 	/**
 	 * Returns true if the path exists and is a file.
@@ -732,63 +696,33 @@ class FileManager {
 		});
 	}
 
+	// watcher wrappers, kept so old id-based code still works. new code should use FileWatcher directly
 	static var watchIdCounter:Int = 0;
-	static var activeWatchers:Map<Int, Bool> = new Map();
-	static final watchMutex:Mutex = new Mutex();
+	static var activeWatchers:Map<Int, FileWatcher> = new Map();
 
 	/**
-	 * Watch a folder for changes using mtime-hash polling. Returns a watch ID to pass to stopWatcher.
+	 * Watch a folder for changes. Returns a watch ID to pass to stopWatcher.
+	 * Delegates to FileWatcher, which runs on its own thread.
 	 * @param path Folder path to watch.
 	 * @param onChange Callback invoked on the main thread when a change is detected.
 	 * @param intervalMs Polling interval in milliseconds (default 1000).
 	 */
 	public static function watchFolder(path:String, onChange:Void->Void, intervalMs:Int = 1000):Int {
-		watchMutex.acquire();
 		var id = watchIdCounter++;
-		activeWatchers.set(id, true);
-		watchMutex.release();
-
-		var prevHash = computeFolderHash(path);
-
-		enqueueAsync(function poll():Void {
-			Sys.sleep(intervalMs / 1000.0);
-			watchMutex.acquire();
-			var alive = activeWatchers.exists(id) && activeWatchers.get(id);
-			watchMutex.release();
-			if (!alive) { watchMutex.acquire(); activeWatchers.remove(id); watchMutex.release(); return; }
-			var newHash = computeFolderHash(path);
-			if (newHash != prevHash) { prevHash = newHash; mainThread(onChange); }
-			enqueueAsync(poll);
-		});
-
+		activeWatchers.set(id, FileWatcher.folder(path, onChange, intervalMs));
 		return id;
 	}
 
 	/**
-	 * Watch a single file for modifications using mtime polling. Returns a watch ID to pass to stopWatcher.
+	 * Watch a single file for modifications. Returns a watch ID to pass to stopWatcher.
+	 * Delegates to FileWatcher, which runs on its own thread.
 	 * @param filePath File path to watch.
 	 * @param onChange Callback invoked on the main thread when the file changes.
 	 * @param intervalMs Polling interval in milliseconds (default 500).
 	 */
 	public static function watchFile(filePath:String, onChange:Void->Void, intervalMs:Int = 500):Int {
-		watchMutex.acquire();
 		var id = watchIdCounter++;
-		activeWatchers.set(id, true);
-		watchMutex.release();
-
-		var prevMtime:Float = fileExists(filePath) ? FileSystem.stat(filePath).mtime.getTime() : 0;
-
-		enqueueAsync(function poll():Void {
-			Sys.sleep(intervalMs / 1000.0);
-			watchMutex.acquire();
-			var alive = activeWatchers.exists(id) && activeWatchers.get(id);
-			watchMutex.release();
-			if (!alive) { watchMutex.acquire(); activeWatchers.remove(id); watchMutex.release(); return; }
-			var mtime:Float = fileExists(filePath) ? FileSystem.stat(filePath).mtime.getTime() : 0;
-			if (mtime != prevMtime) { prevMtime = mtime; mainThread(onChange); }
-			enqueueAsync(poll);
-		});
-
+		activeWatchers.set(id, FileWatcher.file(filePath, onChange, intervalMs));
 		return id;
 	}
 
@@ -797,24 +731,13 @@ class FileManager {
 	 * @param watchId ID returned by watchFolder or watchFile.
 	 */
 	public static function stopWatcher(watchId:Int):Void {
-		watchMutex.acquire();
-		activeWatchers.set(watchId, false);
-		watchMutex.release();
+		var w = activeWatchers.get(watchId);
+		if (w != null) { w.stop(); activeWatchers.remove(watchId); }
 	}
 
 	/** @deprecated Use stopWatcher instead. */
 	public static inline function stopWatchingFolder(watchId:Int):Void
 		stopWatcher(watchId);
-
-	static function computeFolderHash(path:String):Float {
-		var hash:Float = 0;
-		if (!folderExists(path)) return 0;
-		for (file in FileSystem.readDirectory(path)) {
-			var full = Path.join([path, file]);
-			if (!FileSystem.isDirectory(full)) hash += FileSystem.stat(full).mtime.getTime();
-		}
-		return hash;
-	}
 
 	/**
 	 * Generate a unique file path by appending an incrementing counter if the path already exists.
@@ -1058,57 +981,15 @@ class FileManager {
 		});
 	}
 
-	/**
-	 * Request administrator or elevated privileges, re-launching the process if needed. Only works on native cpp targets.
-	 * @param onSuccess Optional callback on success.
-	 * @param onError Optional error callback.
-	 */
-	public static function requestAdmin(?onSuccess:Void->Void, ?onError:String->Void):Void {
-		enqueueAsync(() -> {
-			try {
-				#if cpp
-					#if windows
-					FileUtils.requestAdmin();
-					#elseif linux
-					try Sys.command("pkexec", [exePath]) catch (_)
-						try Sys.command("gksudo", [exePath]) catch (e2:Dynamic)
-							throw "Could not elevate: " + e2;
-					#elseif mac
-					Sys.command("osascript", ["-e", 'do shell script "$exePath" with administrator privileges']);
-					#else throw "Unsupported platform"; #end
-				#else
-				throw "Elevation only works on native (cpp) targets";
-				#end
-				if (onSuccess != null) mainThread(onSuccess);
-			} catch (e:Dynamic) {
-				if (onError != null) mainThread(() -> onError(Std.string(e)));
-			}
-		});
-	}
+	// platform forwards kept for compat, real logic lives in Platform
+	public static inline function requestAdmin(?onSuccess:Void->Void, ?onError:String->Void):Void
+		Platform.requestAdmin(onSuccess, onError);
 
-	/**
-	 * Returns the current platform name: "Windows", "Mac", "Linux", or "unknown".
-	 */
-	public static function getPlatformName():String {
-		#if (windows || mac || linux) return Sys.systemName();
-		#else return "unknown"; #end
-	}
+	public static inline function getPlatformName():String
+		return Platform.getPlatformName();
 
-	/**
-	 * Returns the OS-appropriate application data path for the given app name, creating it if it does not exist.
-	 * @param appName Application name used as the directory name.
-	 */
-	public static function getAppDataPath(appName:String):String {
-		var base:String;
-		#if windows base = Sys.getEnv("APPDATA");
-		#elseif mac base = Path.join([Sys.getEnv("HOME"), "Library", "Application Support"]);
-		#elseif linux base = Sys.getEnv("XDG_DATA_HOME") ?? Path.join([Sys.getEnv("HOME"), ".local", "share"]);
-		#else throw "Unsupported platform"; #end
-		if (base == null) throw "Could not determine AppData path";
-		var appPath = Path.join([base, appName]);
-		createDirRecursive(appPath);
-		return appPath;
-	}
+	public static inline function getAppDataPath(appName:String):String
+		return Platform.getAppDataPath(appName);
 
 	/** 
 	 * Trace a timestamped log entry for a file operation.
@@ -1129,6 +1010,7 @@ class FileManager {
 		if (dir != "" && dir != ".") createDirRecursive(dir);
 	}
 
+	@:allow(hxFileManager.Platform)
 	static function createDirRecursive(path:String):Void {
 		if (FileSystem.exists(path)) return;
 		var parent = Path.directory(path);

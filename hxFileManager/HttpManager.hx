@@ -12,11 +12,23 @@ class HttpManager {
 	public static var defaultUserAgent:String = "hxFileManager";
 	public static var defaultTimeout:Int = 10;
 
-	/** Request text from a URL. @param url Target URL. @param headers Optional headers. @param maxRedirects Max redirects to follow (default 5). @param onProgress Optional progress callback (downloaded, total). */
+	/**
+	 * Request text from a URL.
+	 * @param url Target URL.
+	 * @param headers Optional headers.
+	 * @param maxRedirects Max redirects to follow (default 5).
+	 * @param onProgress Optional progress callback (downloaded, total).
+	 */
 	public static function requestText(url:String, ?headers:Map<String, String>, maxRedirects:Int = 5, ?onProgress:(Int, Int)->Void):String
 		return requestBytes(url, headers, maxRedirects, onProgress).toString();
 
-	/** Request raw bytes from a URL. @param url Target URL. @param headers Optional headers. @param maxRedirects Max redirects to follow (default 5). @param onProgress Optional progress callback (downloaded, total). */
+	/**
+	 * Request raw bytes from a URL.
+	 * @param url Target URL.
+	 * @param headers Optional headers.
+	 * @param maxRedirects Max redirects to follow (default 5).
+	 * @param onProgress Optional progress callback (downloaded, total).
+	 */
 	public static function requestBytes(url:String, ?headers:Map<String, String>, maxRedirects:Int = 5, ?onProgress:(Int, Int)->Void):Bytes {
 		if (maxRedirects < 0) throw new HttpError("Too many redirects", url);
 
@@ -49,7 +61,14 @@ class HttpManager {
 		return result;
 	}
 
-	/** POST JSON data to a URL. @param url Target URL. @param data Object to serialise as JSON body. @param headers Optional extra headers. @param onSuccess Optional callback with response text. @param onError Optional callback with error message. */
+	/**
+	 * POST JSON data to a URL.
+	 * @param url Target URL.
+	 * @param data Object to serialise as JSON body.
+	 * @param headers Optional extra headers.
+	 * @param onSuccess Optional callback with response text.
+	 * @param onError Optional callback with error message.
+	 */
 	public static function postJson(url:String, data:Dynamic, ?headers:Map<String, String>, ?onSuccess:String->Void, ?onError:String->Void):Void {
 		var h = buildRequest(url, headers);
 		h.setHeader("Content-Type", "application/json");
@@ -60,7 +79,14 @@ class HttpManager {
 		catch (e:Dynamic) if (onError != null) onError(Std.string(e));
 	}
 
-	/** POST form-encoded key-value pairs to a URL. @param url Target URL. @param fields Map of field name to value. @param headers Optional extra headers. @param onSuccess Optional callback with response text. @param onError Optional callback with error message. */
+	/**
+	 * POST form-encoded key-value pairs to a URL.
+	 * @param url Target URL.
+	 * @param fields Map of field name to value.
+	 * @param headers Optional extra headers.
+	 * @param onSuccess Optional callback with response text.
+	 * @param onError Optional callback with error message.
+	 */
 	public static function postForm(url:String, fields:Map<String, String>, ?headers:Map<String, String>, ?onSuccess:String->Void, ?onError:String->Void):Void {
 		var h = buildRequest(url, headers);
 		h.setHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -73,7 +99,13 @@ class HttpManager {
 		catch (e:Dynamic) if (onError != null) onError(Std.string(e));
 	}
 
-	/** Send a DELETE request. @param url Target URL. @param headers Optional headers. @param onSuccess Optional callback with response text. @param onError Optional callback with error message. */
+	/**
+	 * Send a DELETE request.
+	 * @param url Target URL.
+	 * @param headers Optional headers.
+	 * @param onSuccess Optional callback with response text.
+	 * @param onError Optional callback with error message.
+	 */
 	public static function delete(url:String, ?headers:Map<String, String>, ?onSuccess:String->Void, ?onError:String->Void):Void {
 		var h = buildRequest(url, headers);
 		h.setHeader("X-HTTP-Method-Override", "DELETE");
@@ -83,7 +115,14 @@ class HttpManager {
 		catch (e:Dynamic) if (onError != null) onError(Std.string(e));
 	}
 
-	/** Send a PUT request with a JSON body. @param url Target URL. @param data Object to serialise as JSON body. @param headers Optional extra headers. @param onSuccess Optional callback with response text. @param onError Optional callback with error message. */
+	/**
+	 * Send a PUT request with a JSON body.
+	 * @param url Target URL.
+	 * @param data Object to serialise as JSON body.
+	 * @param headers Optional extra headers.
+	 * @param onSuccess Optional callback with response text.
+	 * @param onError Optional callback with error message.
+	 */
 	public static function putJson(url:String, data:Dynamic, ?headers:Map<String, String>, ?onSuccess:String->Void, ?onError:String->Void):Void {
 		var h = buildRequest(url, headers);
 		h.setHeader("Content-Type", "application/json");
@@ -95,7 +134,14 @@ class HttpManager {
 		catch (e:Dynamic) if (onError != null) onError(Std.string(e));
 	}
 
-	/** Send a PATCH request with a JSON body. @param url Target URL. @param data Object to serialise as JSON body. @param headers Optional extra headers. @param onSuccess Optional callback with response text. @param onError Optional callback with error message. */
+	/**
+	 * Send a PATCH request with a JSON body.
+	 * @param url Target URL.
+	 * @param data Object to serialise as JSON body.
+	 * @param headers Optional extra headers.
+	 * @param onSuccess Optional callback with response text.
+	 * @param onError Optional callback with error message.
+	 */
 	public static function patchJson(url:String, data:Dynamic, ?headers:Map<String, String>, ?onSuccess:String->Void, ?onError:String->Void):Void {
 		var h = buildRequest(url, headers);
 		h.setHeader("Content-Type", "application/json");
@@ -107,7 +153,13 @@ class HttpManager {
 		catch (e:Dynamic) if (onError != null) onError(Std.string(e));
 	}
 
-	/** Fetch a URL and parse the response as JSON. @param url Target URL. @param headers Optional headers. @param onSuccess Callback with parsed JSON. @param onError Optional error callback. */
+	/**
+	 * Fetch a URL and parse the response as JSON.
+	 * @param url Target URL.
+	 * @param headers Optional headers.
+	 * @param onSuccess Callback with parsed JSON.
+	 * @param onError Optional error callback.
+	 */
 	public static function getJson(url:String, ?headers:Map<String, String>, onSuccess:Dynamic->Void, ?onError:String->Void):Void {
 		var h = buildRequest(url, headers);
 		h.setHeader("Accept", "application/json");
@@ -120,7 +172,15 @@ class HttpManager {
 		catch (e:Dynamic) if (onError != null) onError(Std.string(e));
 	}
 
-	/** Download a URL to a local file path. @param url Remote URL. @param savePath Local destination path. @param headers Optional headers. @param onProgress Optional progress callback (downloaded, total). @param onDone Optional completion callback. @param onError Optional error callback. */
+	/**
+	 * Download a URL to a local file path.
+	 * @param url Remote URL.
+	 * @param savePath Local destination path.
+	 * @param headers Optional headers.
+	 * @param onProgress Optional progress callback (downloaded, total).
+	 * @param onDone Optional completion callback.
+	 * @param onError Optional error callback.
+	 */
 	public static function downloadTo(url:String, savePath:String, ?headers:Map<String, String>, ?onProgress:(Int, Int)->Void, ?onDone:Void->Void, ?onError:String->Void):Void {
 		try {
 			var bytes = requestBytes(url, headers, 5, onProgress);
@@ -131,13 +191,21 @@ class HttpManager {
 		}
 	}
 
-	/** Check if a URL returns any bytes without throwing. @param url Target URL. @param headers Optional headers. */
+	/**
+	 * Check if a URL returns any bytes without throwing.
+	 * @param url Target URL.
+	 * @param headers Optional headers.
+	 */
 	public static function hasBytes(url:String, ?headers:Map<String, String>):Bool {
 		try return requestBytes(url, headers) != null
 		catch (_) return false;
 	}
 
-	/** Return the HTTP status code for a URL without downloading the body. @param url Target URL. @param headers Optional headers. */
+	/**
+	 * Return the HTTP status code for a URL without downloading the body.
+	 * @param url Target URL.
+	 * @param headers Optiogeneratenal headers.
+	 */
 	public static function getStatusCode(url:String, ?headers:Map<String, String>):Int {
 		var code = -1;
 		var h = buildRequest(url, headers);
@@ -148,7 +216,11 @@ class HttpManager {
 		return code;
 	}
 
-	/** Return all response headers for a URL. @param url Target URL. @param headers Optional request headers. */
+	/**
+	 * Return all response headers for a URL.
+	 * @param url Target URL.
+	 * @param headers Optional request headers.
+	 */
 	public static function getResponseHeaders(url:String, ?headers:Map<String, String>):Map<String, String> {
 		var h = buildRequest(url, headers);
 		h.onBytes = (_) -> {};
@@ -157,7 +229,13 @@ class HttpManager {
 		return h.responseHeaders ?? new Map();
 	}
 
-	/** Retry a request up to maxAttempts times with an optional delay between attempts. @param url Target URL. @param maxAttempts Max number of attempts (default 3). @param delayMs Milliseconds to wait between attempts (default 500). @param headers Optional headers. */
+	/**
+	 * Retry a request up to maxAttempts times with an optional delay between attempts.
+	 * @param url Target URL.
+	 * @param maxAttempts Max number of attempts (default 3).
+	 * @param delayMs Milliseconds to wait between attempts (default 500).
+	 * @param headers Optional headers.
+	 */
 	public static function requestWithRetry(url:String, maxAttempts:Int = 3, delayMs:Int = 500, ?headers:Map<String, String>):Bytes {
 		var lastErr:Dynamic = null;
 		for (i in 0...maxAttempts) {
@@ -170,7 +248,9 @@ class HttpManager {
 		throw lastErr;
 	}
 
-	/** Check internet connectivity by hitting a lightweight URL. Updates hasInternet. */
+	/**
+	 * Check internet connectivity by hitting a lightweight URL. Updates hasInternet.
+	 */
 	public static function checkInternet():Bool {
 		try {
 			hasInternet = requestText("https://example.com") != null;
@@ -180,7 +260,10 @@ class HttpManager {
 		return hasInternet;
 	}
 
-	/** Check internet connectivity asynchronously via a timer-based approach. @param onResult Callback with true if internet is reachable. */
+	/**
+	 * Check internet connectivity asynchronously via a timer-based approach.
+	 * @param onResult Callback with true if internet is reachable.
+	 */
 	public static function checkInternetAsync(onResult:Bool->Void):Void {
 		Timer.delay(() -> onResult(checkInternet()), 0);
 	}
@@ -197,25 +280,29 @@ class HttpManager {
 	}
 }
 
-class HttpError {
-	public var message:String;
+class HttpError extends haxe.Exception {
 	public var url:String;
 	public var status:Int;
 	public var redirected:Bool;
 
 	public function new(message:String, url:String, status:Int = -1, redirected:Bool = false) {
-		this.message = message;
+		super(message);
+
 		this.url = url;
 		this.status = status;
 		this.redirected = redirected;
 	}
 
-	public function toString():String {
+	override public function toString():String {
 		var parts = ["[HttpManager | ERROR]"];
+
 		if (status != -1) parts.push('Status: $status');
+
 		if (redirected) parts.push("(Redirected)");
 		parts.push('URL: $url');
 		parts.push('Message: $message');
-		return parts.join(" | ");
+		parts.push('Stack: ${stack != null ? haxe.CallStack.toString(stack) : "Unavailable"}');
+		
+		return parts.join("\n");
 	}
 }

@@ -8,7 +8,7 @@
     <img src="https://img.shields.io/github/repo-size/HeroEyad/hxFileManager" alt="Repository Size" />
     <img src="https://badgen.net/github/stars/HeroEyad/hxFileManager" alt="GitHub Stars" />
     <img src="https://badgen.net/badge/license/MIT/green" alt="License" />
-    <img src="https://badgen.net/badge/haxelib/1.4.0/orange" alt="Version" />
+    <img src="https://badgen.net/badge/haxelib/1.5.0/blue" alt="Version" />
     <img src="https://badgen.net/badge/platform/Windows%20%7C%20Linux%20%7C%20Mac/blue" alt="Platforms" />
 </p>
 
